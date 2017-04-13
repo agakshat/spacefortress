@@ -1,6 +1,12 @@
 #ifndef __SSF_H__
 #define __SSF_H__
 
+#include <math.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #define MAX_EVENTS 50
 #define MAX_KEY_EVENTS 50
 #define MAX_MISSILES 50
@@ -16,7 +22,7 @@ typedef enum {
 typedef enum { NO_TURN, TURN_LEFT, TURN_RIGHT } Turn;
 
 typedef enum {
-  FIRE_KEY, THRUST_KEY, LEFT_KEY, RIGHT_KEY
+  NO_KEY, FIRE_KEY, THRUST_KEY, LEFT_KEY, RIGHT_KEY
 } KeySym;
 
 typedef struct {
@@ -33,6 +39,7 @@ typedef enum {
   VLNER_RESET_EVENT,
   FORTRESS_DESTROYED_EVENT,
   FORTRESS_RESPAWN_EVENT,
+  SHIP_RESPAWN_EVENT,
   EXPLODE_BIGHEX_EVENT,
   EXPLODE_SMALLHEX_EVENT
 } Event;
@@ -46,19 +53,17 @@ typedef struct {
 typedef struct {
   Point position, velocity;
   double angle;
-  Point startLocation, startVelocity;
-  double startAngle;
-  double collisionRadius;
+  int collisionRadius;
   bool alive;
 } Object;
 
 typedef struct {
   Point points[6];
+  int radius;
 } Hexagon;
 
 typedef struct {
   Object o;
-  double acceleration, turnSpeed, maxVelocity;
   Timer deathTimer;
   bool thrustFlag;
   Turn turnFlag;
@@ -88,8 +93,8 @@ typedef struct {
 
 typedef struct {
   bool thrust, left, right, fire;
-  Key events[MAX_KEY_EVENTS];
   int eventCount;
+  Key events[MAX_KEY_EVENTS];
 } Keys;
 
 typedef struct {
@@ -107,15 +112,24 @@ typedef struct {
   /* Points */
   int destroyFortress, shipDeathPenalty, missilePenalty;
   struct {
-    int shellSpeed, sectorSize, lockTime, vulnerabilityTime, vulnerabilityThreshold;
+    int speed;
+    int collisionRadius;
+  } shell;
+  struct {
+    int sectorSize, lockTime, vulnerabilityTime, vulnerabilityThreshold;
     int collisionRadius;
   } fortress;
   /* Hexagons */
   int bigHex, smallHex;
   struct {
+    int speed;
+    int collisionRadius;
+  } missile;
+  struct {
     int explodeDuration, turnSpeed, collisionRadius;
     double acceleration;
     Point startPosition, startVelocity;
+    int startAngle;
   } ship;
   /* Game Modes */
   bool autoTurn;
@@ -137,11 +151,30 @@ typedef struct {
   Events events;
 } Game;
 
+#define MAX_WIREFRAME_POINTS 10
+#define MAX_WIREFRAME_LINES 10
+
+typedef struct {
+  int from, to;
+} WireFrameLine;
+
+typedef struct {
+  Point points[MAX_WIREFRAME_POINTS];
+  int pointCount;
+  WireFrameLine lines[MAX_WIREFRAME_LINES];
+  int lineCount;
+  int r, g, b;
+} WireFrame;
+
+extern WireFrame missileWireFrame, shellWireFrame, shipWireFrame, fortressWireFrame;
+
 void pressKey(Game *game, KeySym sym);
 void releaseKey(Game *game, KeySym sym);
-void StepOneTick(Game *game);
+void stepOneTick(Game *game, int ms);
+bool isGameOver(Game *game);
 
 Game* makeAutoTurnGame();
 Game* makeExplodeGame();
+void freeGame(Game *game);
 
 #endif
