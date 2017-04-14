@@ -3,10 +3,16 @@
 
 (in-package #:ssf-cffi)
 
-(cffi:define-foreign-library ssf
-  (t (:default "ssf")))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (cffi:define-foreign-library ssf
+    (t (:default "ssf"))))
 
-(cffi:use-foreign-library ssf)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  ;; Assume the library is in the same directory as this file.
+  (pushnew (make-pathname :name nil :type nil
+                          :defaults (or #.*compile-file-pathname* *load-pathname*))
+           cffi:*foreign-library-directories*)
+  (cffi:use-foreign-library ssf))
 
 (defconstant +max-events+ 50)
 (defconstant +max-key-events+ 50)
@@ -168,15 +174,5 @@
   (game :pointer (:struct game))
   (ms :int))
 
-#-allegro
 (cffi:defcfun ("isGameOver" game-over-p) :bool
   (game :pointer (:struct game)))
-
-;; Allegro CL on OSX has a problem with a :bool return type. So do
-;; this little dance.
-#+allegro
-(cffi:defcfun ("isGameOver" game-over-helper) :boolean
-  (game :pointer (:struct game)))
-
-#+allegro
-(defun game-over-p (g) (/= (game-over-helper g) 0))

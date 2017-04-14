@@ -202,7 +202,9 @@ void playSound(Sound s) {
 }
 
 void reward(Game *game, int amount) {
+  game->score.rawPoints += amount;
   game->score.points += amount;
+  if (game->score.points < 0) game->score.points = 0;
 }
 
 void penalize(Game *game, int amount) {
