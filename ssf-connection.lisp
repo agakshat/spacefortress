@@ -34,7 +34,10 @@
 
 (defmethod backend-connection-report ((c ssf-connection))
   (ecase (state c)
-    (:game (ssf-cffi::report-game-state (game c)))
+    (:game
+     (cffi:with-foreign-pointer (state 10000)
+       (ssf-cffi::dump-sexp-game-state (game c) state 10000)
+       (read-from-string (cffi:convert-from-foreign state :string))))
     (:score (print (ssf-cffi::report-game-score (game c))))))
 
 (defmethod backend-connection-step ((c ssf-connection))

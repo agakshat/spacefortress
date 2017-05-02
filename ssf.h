@@ -177,4 +177,6 @@ Game* makeAutoTurnGame();
 Game* makeExplodeGame();
 void freeGame(Game *game);
 
+void dumpSexpGameState(Game *game, char *buf, size_t size);
+
 #endif

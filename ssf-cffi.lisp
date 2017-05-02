@@ -176,3 +176,9 @@
 
 (cffi:defcfun ("isGameOver" game-over-p) :bool
   (game :pointer (:struct game)))
+
+(cffi:defcfun ("dumpSexpGameState" dump-sexp-game-state) :void
+  (game :pointer (:struct game))
+  (buf :pointer :char)
+  (size :int))
+

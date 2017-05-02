@@ -123,16 +123,22 @@ int main(int argc, char **argv) {
 
   int last;
   int now = SDL_GetTicks();
-  printf("start\n");
-  for (int i=0; i<2000; i++) {
-    g = makeExplodeGame();
-    while (!isGameOver(g)) stepOneTick(g, 33);
-    freeGame(g);
-  }
-  printf("ellapse time: %d\n", SDL_GetTicks() - now);
+  /* printf("start\n"); */
+  /* for (int i=0; i<2000; i++) { */
+  /*   g = makeExplodeGame(); */
+  /*   while (!isGameOver(g)) stepOneTick(g, 33); */
+  /*   freeGame(g); */
+  /* } */
+  /* printf("ellapse time: %d\n", SDL_GetTicks() - now); */
 
   /* g = makeAutoTurnGame(); */
   g = makeExplodeGame();
+
+  /* char state[10000]; */
+  /* /\* int n; *\/ */
+  /* dumpSexpGameState(g, state, 10000); */
+
+  /* printf("%s\n", state); */
 
   while (!isGameOver(g)) {
     last = now;

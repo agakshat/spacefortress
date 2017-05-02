@@ -1,5 +1,7 @@
 #include "ssf.h"
 
+#define BUFSIZE 8192
+
 WireFrame missileWireFrame = (WireFrame) { .points[0] = (Point){0,0},
                                            .points[1] = (Point){ -25, 0 },
                                            .points[2] = (Point){ -5, 5 },
@@ -124,6 +126,10 @@ double deg(double rad) {
 
 double rad(double d) {
   return d * M_PI / 180;
+}
+
+double norm(double x, double y) {
+  return sqrt(x*x + y*y);
 }
 
 double angleTo(const Point *p1, const Point *p2) {
@@ -558,4 +564,108 @@ Game* makeExplodeGame() {
 
 void freeGame(Game *game) {
   free(game);
+}
+
+int dumpProjectile(const Object *o, char *buf, size_t size) {
+  int n = 0;
+  n = snprintf(buf, size, "(:x %.3f :y %.3f :vx %.3f :vy %.3f :orientation %.1f)",
+               o->position.x,
+               o->position.y,
+               o->velocity.x,
+               o->velocity.y,
+               o->angle);
+  return n;
+}
+
+double vdir(const Object *ship, const Object *fortress) {
+  if (norm(ship->velocity.x, ship->velocity.y) == 0.0) {
+    return 0.0;
+  }
+  double o = atan2(-(fortress->position.y-ship->position.y),
+                   fortress->position.x-ship->position.x);
+  double v = atan2(ship->velocity.y, ship->velocity.x);
+  double diff = v - o;
+  if (diff > M_PI) diff -= M_PI*2;
+  if (diff < -M_PI) diff += M_PI*2;
+  return deg(diff);
+}
+
+void dumpSexpGameState(Game *game, char *buf, size_t size) {
+  char missiles[BUFSIZE];
+  char shells[BUFSIZE];
+  int n;
+
+  n = 0;
+  missiles[0] = 0;
+  for (int i=0; i<MAX_MISSILES; i++) {
+    if (game->missiles[i].o.alive) {
+      n += dumpProjectile(&game->missiles[i].o, missiles, BUFSIZE-n);
+      if (n >= BUFSIZE-1) break;
+    }
+  }
+  n = 0;
+  shells[0] = 0;
+  for (int i=0; i<MAX_SHELLS; i++) {
+    if (game->shells[i].o.alive) {
+      n += dumpProjectile(&game->shells[i].o, missiles, BUFSIZE-n);
+      if (n >= BUFSIZE-1) break;
+    }
+  }
+
+  n = snprintf(buf, size,
+               "(:screen-type \"game\""
+               " :mode \"events\""
+               " :game \"explode\""
+               " :time %d"
+               " :missiles (%s)"
+               " :shells (%s)"
+               " :ship (:alive %s :x %.3f :y %.3f :vx %.3f :vy %.3f :orientation %.1f :distance-from-fortress %.3f :vdir %.3f :speed %.3f)"
+               " :fortress (:alive %s :x %.3f :y %.3f :orientation %.1f)"
+               " :bighex %d"
+               " :smallhex %d"
+               " :bonus 0"
+               " :pnts %d"
+               " :rawpnts %d"
+               " :vlner %d"
+               " :collisions %s"
+               " :active t"
+               " :events %s"
+               " :keys nil"
+               ")",
+               game->time,
+               missiles,
+               shells,
+               game->ship.o.alive ? "t":"nil",
+               game->ship.o.position.x,
+               game->ship.o.position.y,
+               game->ship.o.velocity.x,
+               game->ship.o.velocity.y,
+               game->ship.o.angle,
+               norm(game->ship.o.position.x-game->fortress.o.position.x, game->ship.o.position.y-game->fortress.o.position.y),
+               vdir(&game->ship.o, &game->fortress.o),
+               norm(game->ship.o.velocity.x, game->ship.o.velocity.y),
+               game->fortress.o.alive ? "t":"nil",
+               game->fortress.o.position.x,
+               game->fortress.o.position.y,
+               game->fortress.o.angle,
+               game->config.bigHex,
+               game->config.smallHex,
+               game->score.points,
+               game->score.rawPoints,
+               game->score.vulnerability,
+               "nil", // collisions
+               "nil"); // events
+}
+
+int saveGameState(Game *game, char *path) {
+  FILE f;
+  f = fopen(f, "a");
+  if (f == NULL) {
+    return -1;
+  }
+
+  fprintf(f, "%d\n", game->time)
+
+  fclose(f);
+  return 1;
 }
