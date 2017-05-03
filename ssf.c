@@ -656,16 +656,3 @@ void dumpSexpGameState(Game *game, char *buf, size_t size) {
                "nil", // collisions
                "nil"); // events
 }
-
-int saveGameState(Game *game, char *path) {
-  FILE f;
-  f = fopen(f, "a");
-  if (f == NULL) {
-    return -1;
-  }
-
-  fprintf(f, "%d\n", game->time)
-
-  fclose(f);
-  return 1;
-}
