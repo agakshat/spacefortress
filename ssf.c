@@ -132,6 +132,12 @@ double norm(double x, double y) {
   return sqrt(x*x + y*y);
 }
 
+double stdAngle(double a) {
+  if (a <= -360 || a >= 360) a = fmod(a, 360);
+  if (a < 0) a += 360;
+  return a;
+}
+
 double angleTo(const Point *p1, const Point *p2) {
   double a = atan2(-(p2->y-p1->y), p2->x-p1->x);
   if (a < 0) a += M_PI*2;
@@ -183,7 +189,15 @@ bool collided(const Object *e1, const Object *e2) {
   return d <= e1->collisionRadius + e2->collisionRadius;
 }
 
+void maybeResetKeyEvents(Game *game) {
+  if( game->keys.processed == true ) {
+    game->keys.eventCount = 0;
+    game->keys.processed = false;
+  }
+}
+
 void pressKey(Game *game, KeySym sym) {
+  maybeResetKeyEvents(game);
   if (game->keys.eventCount < MAX_KEY_EVENTS) {
     game->keys.events[game->keys.eventCount].sym = sym;
     game->keys.events[game->keys.eventCount].state = true;
@@ -192,6 +206,7 @@ void pressKey(Game *game, KeySym sym) {
 }
 
 void releaseKey(Game *game, KeySym sym) {
+  maybeResetKeyEvents(game);
   if (game->keys.eventCount < MAX_KEY_EVENTS) {
     game->keys.events[game->keys.eventCount].sym = sym;
     game->keys.events[game->keys.eventCount].state = false;
@@ -282,7 +297,7 @@ void fireMissile(Game *game) {
 void updateFortress(Game *game) {
   double dx = game->ship.o.position.x - game->fortress.o.position.x;
   double dy = -(game->ship.o.position.y - game->fortress.o.position.y);
-  double angle_to_ship = fmod(deg(atan2(dy,dx)), 360);
+  double angle_to_ship = stdAngle(deg(atan2(dy,dx)));
 
   if (!game->fortress.o.alive && game->fortress.deathTimer > 1000) {
     game->fortress.timer = 0;
@@ -291,7 +306,7 @@ void updateFortress(Game *game) {
   }
 
   if (game->ship.o.alive) {
-    game->fortress.o.angle = fmod(floor(angle_to_ship / game->config.fortress.sectorSize) * game->config.fortress.sectorSize, 360);
+    game->fortress.o.angle = stdAngle(floor(angle_to_ship / game->config.fortress.sectorSize) * game->config.fortress.sectorSize);
     if (game->fortress.o.angle != game->fortress.lastAngle) {
       game->fortress.lastAngle = game->fortress.o.angle;
       game->fortress.timer = 0;
@@ -305,6 +320,7 @@ void updateFortress(Game *game) {
 
 void processKeyState (Game *game) {
   int i;
+  maybeResetKeyEvents(game);
   for(i=0; i<game->keys.eventCount; i++) {
     if (game->keys.events[i].state == true) {
       if (game->keys.events[i].sym == LEFT_KEY) {
@@ -324,7 +340,7 @@ void processKeyState (Game *game) {
       }
     }
   }
-  game->keys.eventCount = 0;
+  game->keys.processed = true;
 }
 
 void killShip(Game *game) {
@@ -343,9 +359,9 @@ void updateShip(Game *game) {
       game->ship.o.angle = floor(angleTo(&game->ship.o.position, &game->fortress.o.position));
     } else {
       if (game->ship.turnFlag == TURN_LEFT) {
-        game->ship.o.angle = fmod(game->ship.o.angle + game->config.ship.turnSpeed, 360);
+        game->ship.o.angle = stdAngle(game->ship.o.angle + game->config.ship.turnSpeed);
       } else if (game->ship.turnFlag == TURN_RIGHT) {
-        game->ship.o.angle = fmod(game->ship.o.angle - game->config.ship.turnSpeed, 360);
+        game->ship.o.angle = stdAngle(game->ship.o.angle - game->config.ship.turnSpeed);
       }
     }
     if (game->ship.thrustFlag) {
@@ -516,6 +532,7 @@ void initGame(Game *game) {
   game->keys.right = false;
   game->keys.fire = false;
   game->keys.eventCount = 0;
+  game->keys.processed = false;
 
   game->ship.o.collisionRadius = game->config.ship.collisionRadius;
   resetShip(game);
@@ -536,11 +553,11 @@ void initGame(Game *game) {
   game->score.points = 0;
   game->score.rawPoints = 0;
   game->score.vulnerability = 0;
+  game->stats.shipDeaths = 0;
 
   game->tick = 0;
   game->time = 0;
-  resetCollisions(game);
-  resetEvents(game);
+  resetTick(game);
 }
 
 Game* makeAutoTurnGame() {
@@ -563,6 +580,9 @@ Game* makeExplodeGame() {
 }
 
 void freeGame(Game *game) {
+  if (game->logStream) {
+    closeLog(game);
+  }
   free(game);
 }
 
@@ -655,4 +675,151 @@ void dumpSexpGameState(Game *game, char *buf, size_t size) {
                game->score.vulnerability,
                "nil", // collisions
                "nil"); // events
+}
+
+void saveClassicGameState(Game *game) {
+  fprintf(game->logStream, "%d %.6f %s %.3f %.3f %.3f %.3f %.1f n - - %s %.1f %s %s 0 %d 0 0 %d 0 0 0 0 %s %s %s %s n n y\n",
+          game->time,
+          0.0,
+          game->ship.o.alive ? "y":"n",
+          game->ship.o.position.x,
+          game->ship.o.position.y,
+          game->ship.o.velocity.x,
+          game->ship.o.velocity.y,
+          game->ship.o.angle,
+          /* mine alive */
+          /* mine x */
+          /* mine y */
+          game->fortress.o.alive ? "y":"n",
+          game->fortress.o.angle,
+          "[]",
+          "[]",
+          /* bonus */
+          game->score.points,
+          /* cntrl */
+          /* vlcty */
+          game->score.vulnerability,
+          /* iff */
+          /* intrvl */
+          /* speed */
+          /* shots */
+          game->ship.thrustFlag ? "y":"n",
+          game->ship.turnFlag == TURN_LEFT ? "y":"n",
+          game->ship.turnFlag == TURN_RIGHT ? "y":"n",
+          "n"
+          /* iff key */
+          /* shots key */
+          /* pnts key */
+          /* game active */
+          );
+}
+
+bool logGameStateHeaders(Game *game) {
+  if (game->logStream) {
+    fprintf(game->logStream, "{");
+    /* FIXME: All config variables should be recorded. But how to do that programmatically? */
+    fprintf(game->logStream, "\"version\":%s,", gVersion);
+    fprintf(game->logStream, "\"sha1\":%s,", gGitSha1);
+    fprintf(game->logStream, "\"autoTurn\":%d,", game->config.autoTurn);
+    fprintf(game->logStream, "\"bigHex\":%d,", game->config.bigHex);
+    fprintf(game->logStream, "\"smallHex\":%d,", game->config.smallHex);
+    fprintf(game->logStream, "\"headers\":[\"game_time\",\"ship_alive\",\"ship_x\",\"ship_y\",\"ship_vel_x\",\"ship_vel_y\",\"ship_angle\",\"fortress_alive\",\"fortress_angle\",\"missiles\",\"shells\",\"points\",\"vulnerability\",\"thrusting\",\"turning_left\",\"turning_right\",\"game_events\",\"input_events\"]");
+    fprintf(game->logStream, "}\n");
+    fflush(game->logStream);
+    return true;
+  }
+  return false;
+}
+
+bool logGameStateFooters(Game *game) {
+  if (game->logStream) {
+    fprintf(game->logStream, "{");
+    fprintf(game->logStream, "\"points\":%d,", game->score.points);
+    fprintf(game->logStream, "\"rawPoints\":%d", game->score.rawPoints);
+    fprintf(game->logStream, "}\n");
+    fflush(game->logStream);
+    return true;
+  }
+  return false;
+}
+
+bool openLog(Game *game, char *path) {
+  game->logStream = fopen(path, "a");
+  if (game->logStream == NULL) {
+    return false;
+  }
+  logGameStateHeaders( game );
+  return true;
+}
+
+void closeLog(Game *game) {
+  if (game->logStream) {
+    logGameStateFooters( game );
+    fclose(game->logStream);
+    game->logStream = NULL;
+  }
+}
+
+bool logGameState(Game *game) {
+  if (game->logStream) {
+    fprintf(game->logStream, "[%d,%d,%.3f,%.3f,%.3f,%.3f,%.1f,%d,%.1f,",
+            game->time,
+            game->ship.o.alive?1:0,
+            game->ship.o.position.x,
+            game->ship.o.position.y,
+            game->ship.o.velocity.x,
+            game->ship.o.velocity.y,
+            game->ship.o.angle,
+            game->fortress.o.alive?1:0,
+            game->fortress.o.angle);
+
+    fprintf(game->logStream, "[");
+    for (int i=0; i<MAX_MISSILES; i++) {
+      if (game->missiles[i].o.alive) {
+        fprintf(game->logStream, "%s[%.3f,%.3f,%.1f]",
+                i==0?"":",",
+                game->missiles[i].o.position.x,
+                game->missiles[i].o.position.y,
+                game->missiles[i].o.angle);
+      }
+    }
+    fprintf(game->logStream, "],[");
+    for (int i=0; i<MAX_SHELLS; i++) {
+      if (game->shells[i].o.alive) {
+        fprintf(game->logStream, "%s[%.3f,%.3f,%.1f]",
+                i==0?"":",",
+                game->shells[i].o.position.x,
+                game->shells[i].o.position.y,
+                game->shells[i].o.angle);
+      }
+    }
+    fprintf(game->logStream, "],");
+    fprintf(game->logStream, "%d,%d,%d,%d,%d,",
+            game->score.points,
+            game->score.vulnerability,
+            game->ship.thrustFlag?1:0,
+            game->ship.turnFlag == TURN_LEFT ? 1:0,
+            game->ship.turnFlag == TURN_RIGHT ? 1:0);
+    /* Game Events */
+    fprintf(game->logStream, "[");
+    for( int i=0; i<game->events.count; i++ ) {
+      fprintf(game->logStream, "%s%d",
+              i==0?"":",",
+              game->events.events[i]);
+    }
+    fprintf(game->logStream, "],[");
+    /* Input Events */
+    for( int i=0; i<game->keys.eventCount; i++ ) {
+      fprintf(game->logStream, "%s[%d,%d]",
+              i==0?"":",",
+              game->keys.events[i].state?1:0,
+              game->keys.events[i].sym);
+    }
+    fprintf(game->logStream, "]");
+    fprintf(game->logStream, "]\n");
+    fflush(game->logStream);
+    return true;
+  } else {
+    return false;
+  }
 }

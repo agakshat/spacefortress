@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "version.h"
+
 #define MAX_EVENTS 50
 #define MAX_KEY_EVENTS 50
 #define MAX_MISSILES 50
@@ -95,6 +97,7 @@ typedef struct {
   bool thrust, left, right, fire;
   int eventCount;
   Key events[MAX_KEY_EVENTS];
+  bool processed;
 } Keys;
 
 typedef struct {
@@ -149,6 +152,7 @@ typedef struct {
   int tick, time;
   Collisions collisions;
   Events events;
+  FILE *logStream;
 } Game;
 
 #define MAX_WIREFRAME_POINTS 10
@@ -178,5 +182,9 @@ Game* makeExplodeGame();
 void freeGame(Game *game);
 
 void dumpSexpGameState(Game *game, char *buf, size_t size);
+
+bool openLog(Game *game, char *path);
+void closeLog(Game *game);
+bool logGameState(Game *game);
 
 #endif

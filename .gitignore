@@ -1,8 +1,15 @@
 ssf
+ssf_cairo
 *.dx32fsl
 *.dx64fsl
 *.fasl
 ssf.dSYM/
 ssf.dylib.dSYM/
 ssf.dylib
+ssf_cairo.dSYM/
+ssf_cairo.dylib.dSYM/
+ssf_cairo.dylib
 *.pyc
+*.o
+data/
+version.c

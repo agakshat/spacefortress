@@ -89,6 +89,7 @@ if __name__ == '__main__':
 
     now = sdl2.SDL_GetTicks()
     g = ssf.makeExplodeGame()
+    # g = ssf.makeAutoTurnGame()
     while not ssf.isGameOver(g):
         last = now
         now = sdl2.SDL_GetTicks()
