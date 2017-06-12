@@ -6,12 +6,11 @@
 
 typedef struct {
   cairo_surface_t* surface;
-  cairo_t* ctx;
   void* raw;
 } PixelBuffer;
 
-PixelBuffer* newPixelBuffer();
-void freePixelBuffer( PixelBuffer *pb );
-void drawGameState( Game *g, cairo_t* ctx );
+PixelBuffer* newPixelBuffer( Game* g, int width, int height );
+void freePixelBuffer( PixelBuffer* pb );
+void drawGameState( Game* g, cairo_surface_t* surface );
 
 #endif

@@ -47,13 +47,14 @@ void readEvents(Game *g) {
 
 void draw( SDL_Renderer *r, SDL_Texture *t, Game *g ) {
   void *pixels;
+  SDL_Rect view;
   int pitch;
 
+  SDL_RenderGetViewport( r, &view );
   SDL_LockTexture( t, NULL, &pixels, &pitch );
 
-  cairo_surface_t *s = cairo_image_surface_create_for_data( pixels, CAIRO_FORMAT_ARGB32, 710, 626, pitch );
-  cairo_t *ctx = cairo_create(s);
-  drawGameState( g, ctx );
+  cairo_surface_t *s = cairo_image_surface_create_for_data( pixels, CAIRO_FORMAT_ARGB32, view.w, view.h, pitch );
+  drawGameState( g, s );
   cairo_surface_destroy( s );
 
   SDL_UnlockTexture( t );
@@ -61,12 +62,19 @@ void draw( SDL_Renderer *r, SDL_Texture *t, Game *g ) {
 }
 
 int main(int argc, char **argv) {
-  int width = 710, height = 626;
   SDL_Window *w;
   SDL_Renderer *r;
   Game *g;
   /* PixelBuffer *pb; */
   SDL_Texture *texture;
+
+  /* g = makeAutoTurnGame(); */
+  g = makeExplodeGame();
+
+  /* int width = g->config.width; */
+  /* int height = g->config.height; */
+  int width = 405;
+  int height = 450;
 
   SDL_Init(SDL_INIT_VIDEO);
 
@@ -80,8 +88,6 @@ int main(int argc, char **argv) {
                                SDL_TEXTUREACCESS_STREAMING,
                                width, height );
 
-  /* g = makeAutoTurnGame(); */
-  g = makeExplodeGame();
 
   openLog(g, "data/log.txt");
 

@@ -483,7 +483,7 @@ bool isGameOver(Game *game) {
 
 void baseConfig(Config *config) {
   config->width = 710;
-  config->height = 600;
+  config->height = 626;
   config->gameTime = 180000;
   /* Points */
   config->destroyFortress = 100;

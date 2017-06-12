@@ -1,24 +1,79 @@
 #include "ssf_cairo.h"
 
+#if CAIRO_HAS_FT_FONT
+#include <cairo/cairo-ft.h>
+
+cairo_font_face_t *loadFont( const char *filename ) {
+  static FT_Library *cairoFT = NULL;
+  static cairo_font_face_t *cairoFont = NULL;
+  FT_Face face;
+  FT_Error error;
+  static const cairo_user_data_key_t key;
+  int status;
+
+  if( cairoFont != NULL ) return cairoFont;
+
+  if( cairoFT == NULL ) {
+    cairoFT = (FT_Library*)malloc( sizeof( FT_Library ));
+    error = FT_Init_FreeType( cairoFT );
+    if( error ) return NULL;
+  }
+
+  error = FT_New_Face (*cairoFT,
+                       filename,
+                       0,
+                       &face);
+  printf("the errors: %d %d\n", FT_Err_Ok, error);
+  if (error != FT_Err_Ok) {
+    if ( error == FT_Err_Unknown_File_Format ) {
+      printf ("Unknown file format\n");
+      return NULL;
+    } else {
+      printf ("some other error %d\n", error);
+      return NULL;
+    }
+  }
+
+  printf("try\n");
+  cairoFont = cairo_ft_font_face_create_for_ft_face (face, 0);
+  printf("create %p\n", cairoFont);
+  status = cairo_font_face_set_user_data (cairoFont, &key,
+                                          face, (cairo_destroy_func_t) FT_Done_Face);
+  printf("grrr! %p\n", cairoFont);
+  if (status) {
+    printf("can't set user data\n");
+    cairo_font_face_destroy (cairoFont);
+    FT_Done_Face (face);
+    cairoFont = NULL;
+  }
+
+  return cairoFont;
+}
+
+#endif
+
 double deg2rad( double deg ) {
   return deg * M_PI / 180;
 }
 
-PixelBuffer* newPixelBuffer( Game* g ) {
+PixelBuffer* newPixelBuffer( Game* g, int width, int height ) {
   PixelBuffer* pb;
 
   pb = (PixelBuffer *)malloc( sizeof( PixelBuffer ));
   if( pb == NULL ) {
     return NULL;
   }
-  pb->surface = cairo_image_surface_create( CAIRO_FORMAT_RGB24, 710, 626 );
-  pb->ctx = cairo_create( pb->surface );
+  pb->surface = cairo_image_surface_create( CAIRO_FORMAT_RGB24,
+                                            width==0 ? g->config.width : width,
+                                            height==0 ? g->config.height : height );
+  pb->raw = cairo_image_surface_get_data( pb->surface );
 
   return pb;
 }
 
 
 void freePixelBuffer( PixelBuffer* pb ) {
+  cairo_surface_destroy( pb->surface );
   free(pb);
 }
 
@@ -70,7 +125,14 @@ void drawExplosion( cairo_t *ctx, const Point* p ) {
 void centeredText(cairo_t *ctx, char *text, int x, int y) {
   cairo_text_extents_t extents;
   cairo_text_extents(ctx, text, &extents);
-  cairo_move_to(ctx, x - extents.width/2.0, y - extents.height/2.0);
+
+  /* cairo_save(ctx); */
+  /* cairo_rectangle(ctx, x - extents.width/2.0, y - extents.height/2.0, extents.width+1, extents.height+1); */
+  /* cairo_set_source_rgb(ctx, .5, .5, .5); */
+  /* cairo_fill(ctx); */
+  /* cairo_restore(ctx); */
+
+  cairo_move_to(ctx, x - extents.width/2.0, y + extents.height/2.0);
   cairo_show_text(ctx, text);
 }
 
@@ -96,25 +158,49 @@ void drawScore( cairo_t *ctx, int pnts, int vlner ) {
 
 
   cairo_set_source_rgb(ctx, 0, 1, 0);
-  cairo_select_font_face(ctx, "sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+  cairo_select_font_face(ctx, "sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+  /* cairo_set_font_face( ctx, loadFont( "freesansbold.ttf" )); */
   cairo_set_font_size( ctx, 20 );
 
-  centeredText(ctx, "PNTS", start + 89/2, score_y+label_height); /* 18 */
-  centeredText(ctx, "VLNER", start + 89 + 89/2, score_y+label_height); /* 18 */
+  centeredText(ctx, "PNTS", start + 89/2, score_y+label_height/2); /* 18 */
+  centeredText(ctx, "VLNER", start + 89 + 89/2, score_y+label_height/2); /* 18 */
 
   cairo_set_font_size( ctx, 24 );
   cairo_set_source_rgb(ctx, 1, 1, 0);
 
   char text[256];
   sprintf(text, "%d", pnts);
-  centeredText(ctx, text, start + 89/2, score_y+label_height*2); /* 18 */
+  centeredText(ctx, text, start + 89/2, score_y+label_height*1.5); /* 18 */
   sprintf(text, "%d", vlner);
-  centeredText(ctx, text, start + 89 + 89/2, score_y+label_height*2); /* 18 */
+  centeredText(ctx, text, start + 89 + 89/2, score_y+label_height*1.5); /* 18 */
 }
 
-void drawGameState( Game *g, cairo_t *ctx ) {
+void centerSanely( Game *g, cairo_t *ctx, int sw, int sh ) {
+  int bighex_height = g->config.bigHex*sin(M_PI*2/3) * 2;
+  int score_pad = 520-(315+bighex_height/2);
+  int score_height = 32*2;
+  int pad = 10;
+  int ofsx, ofsy;
+
+  ofsx = (sw - g->config.width)/2;
+  ofsy = (sh - g->config.height)/2;
+
+  /* printf("use this one %d %d %d %d\n", sh, bighex_height, score_pad, score_height); */
+  if( sh < bighex_height + score_pad + score_height + pad) {
+    ofsy = -(g->config.height/2 - bighex_height/2)+2;
+  } else {
+    ofsy = sh/2 - (bighex_height + score_pad + score_height)/2 - (g->config.height/2 - bighex_height/2);
+  }
+
+  cairo_translate( ctx, ofsx, ofsy );
+}
+
+/* void drawGameState( Game *g, cairo_t *ctx ) { */
+void drawGameState( Game *g, cairo_surface_t *surface ) {
+  cairo_t *ctx = cairo_create( surface );
+  centerSanely( g, ctx, cairo_image_surface_get_width( surface ), cairo_image_surface_get_height( surface ));
   cairo_set_line_width( ctx, 2 );
-  cairo_set_source_rgb( ctx, 0, 0, 0);
+  cairo_set_source_rgb( ctx, 0, 0, 0 );
   cairo_paint( ctx );
 
   drawHexagon( ctx, &g->bigHex );
@@ -141,4 +227,5 @@ void drawGameState( Game *g, cairo_t *ctx ) {
     }
   }
   drawScore( ctx, g->score.points, g->score.vulnerability );
+  cairo_destroy( ctx );
 }
