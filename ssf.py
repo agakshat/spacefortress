@@ -4,7 +4,8 @@ from ctypes.util import find_library
 __all__ = []
 
 try:
-    dll = cdll.LoadLibrary(find_library("ssf"))
+    # dll = cdll.LoadLibrary(find_library("ssf"))
+    dll = cdll.LoadLibrary(find_library("ssf_cairo"))
 except RuntimeError as exc:
     raise ImportError(exc)
 
@@ -93,7 +94,8 @@ class Keys(Structure):
                 ("right", c_bool),
                 ("fire", c_bool),
                 ("eventCount", c_int),
-                ("events", Key * 50)]
+                ("events", Key * 50),
+                ("processed", c_bool)]
 
 class Events(Structure):
     _fields_ = [("events", Event * 50),
@@ -211,6 +213,46 @@ def dumpSexpGameState(game):
     buf = create_string_buffer(n)
     _dumpSexpGameState(game, buf, n)
     return buf.value
+
+openLog = dll.openLog
+openLog.argtypes = [POINTER(Game), c_char_p]
+openLog.restype = c_bool
+closeLog = dll.closeLog
+closeLog.argtypes = [POINTER(Game)]
+
+logGameState = dll.logGameState
+logGameState.argtypes = [POINTER(Game)]
+logGameState.restype = c_bool
+
+# Cairo related functionality
+
+buffer_from_memory = pythonapi.PyBuffer_FromMemory
+buffer_from_memory.argtypes = [c_void_p, c_int]
+buffer_from_memory.restype = py_object
+
+class PixelBuffer(Structure):
+    _fields_ = [("surface", c_void_p),
+                ("raw", c_void_p),
+                ("height", c_int),
+                ("stride", c_int)]
+
+newPixelBuffer = dll.newPixelBuffer
+newPixelBuffer.argtypes = [POINTER(Game), c_int, c_int]
+newPixelBuffer.restype = POINTER(PixelBuffer)
+
+freePixelBuffer = dll.freePixelBuffer
+freePixelBuffer.argtypes = [POINTER(PixelBuffer)]
+
+_drawGameState = dll.drawGameState
+_drawGameState.argtypes = [POINTER(Game), c_void_p]
+
+def drawGameState(game, pb):
+    _drawGameState(game, pb.contents.surface)
+
+def get_pixel_buffer_data(pb):
+    print "pb data", pb.contents.raw, pb.contents.height, pb.contents.stride
+    return buffer_from_memory(pb.contents.raw, pb.contents.height * pb.contents.stride)
+
 
 # print('game', sizeof(Game))
 # print('config', sizeof(Config))

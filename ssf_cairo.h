@@ -7,6 +7,7 @@
 typedef struct {
   cairo_surface_t* surface;
   void* raw;
+  int height, stride;
 } PixelBuffer;
 
 PixelBuffer* newPixelBuffer( Game* g, int width, int height );

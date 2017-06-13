@@ -67,10 +67,13 @@ PixelBuffer* newPixelBuffer( Game* g, int width, int height ) {
                                             width==0 ? g->config.width : width,
                                             height==0 ? g->config.height : height );
   pb->raw = cairo_image_surface_get_data( pb->surface );
+  pb->height = cairo_image_surface_get_height( pb->surface );
+  pb->stride = cairo_image_surface_get_stride( pb->surface );
+
+  printf("new pb: %p %d %d : %d\n", pb->raw, pb->height, pb->stride, ((char *)pb->raw)[10]);
 
   return pb;
 }
-
 
 void freePixelBuffer( PixelBuffer* pb ) {
   cairo_surface_destroy( pb->surface );
