@@ -106,7 +106,8 @@ void drawHexagon( cairo_t *ctx, Hexagon *h ) {
 }
 
 void drawExplosion( cairo_t *ctx, const Point* p ) {
-  cairo_set_line_width( ctx, 1.4 );
+  /* cairo_set_line_width( ctx, 1.4 ); */
+  cairo_set_line_width( ctx, 2 );
   int ofs = 0;
   for( int radius=15; radius<70; radius += 8 ) {
     ofs += 3;
@@ -198,14 +199,28 @@ void centerSanely( Game *g, cairo_t *ctx, int sw, int sh ) {
   cairo_translate( ctx, ofsx, ofsy );
 }
 
-/* void drawGameState( Game *g, cairo_t *ctx ) { */
-void drawGameState( Game *g, cairo_surface_t *surface ) {
-  cairo_t *ctx = cairo_create( surface );
-  centerSanely( g, ctx, cairo_image_surface_get_width( surface ), cairo_image_surface_get_height( surface ));
-  cairo_set_line_width( ctx, 2 );
-  cairo_set_source_rgb( ctx, 0, 0, 0 );
-  cairo_paint( ctx );
+void tinyCenterSanely( Game *g, cairo_t *ctx, int sw, int sh ) {
+  int bighex_height = g->config.bigHex*sin(M_PI*2/3) * 2;
+  int score_pad = 520-(315+bighex_height/2);
+  int score_height = 32*2;
+  int pad = 10;
+  int ofsx, ofsy;
 
+  ofsx = (sw - g->config.width)/2+120;
+  ofsy = (sh - g->config.height)/2;
+
+  /* printf("use this one %d %d %d %d\n", sh, bighex_height, score_pad, score_height); */
+  if( sh < bighex_height + score_pad + score_height + pad) {
+    ofsy = -(g->config.height/2 - bighex_height/2)+2;
+  } else {
+    ofsy = sh/2 - (bighex_height + score_pad + score_height)/2 - (g->config.height/2 - bighex_height/2);
+  }
+
+  ofsy += 19;
+  cairo_translate( ctx, ofsx, ofsy );
+}
+
+void drawJustGameStuff( cairo_t *ctx, Game *g ) {
   drawHexagon( ctx, &g->bigHex );
   drawHexagon( ctx, &g->smallHex );
 
@@ -225,10 +240,35 @@ void drawGameState( Game *g, cairo_surface_t *surface ) {
     }
   }
   for (int i=0; i<MAX_SHELLS; i++) {
-    if (g->shells[i].o.alive) {
+    double d = sqrt(pow(g->shells[i].o.position.x - g->fortress.o.position.x, 2) + pow(g->shells[i].o.position.y - g->fortress.o.position.y, 2));
+    if (g->shells[i].o.alive && d > 21) {
       drawWireFrame(ctx, &shellWireFrame, &g->shells[i].o.position, g->shells[i].o.angle);
     }
   }
+}
+
+void drawGameState( Game *g, cairo_surface_t *surface ) {
+  cairo_t *ctx = cairo_create( surface );
+  centerSanely( g, ctx, cairo_image_surface_get_width( surface ), cairo_image_surface_get_height( surface ));
+  cairo_set_line_width( ctx, 2 );
+  cairo_set_source_rgb( ctx, 0, 0, 0 );
+  cairo_paint( ctx );
+
+  drawJustGameStuff( ctx, g );
+  drawScore( ctx, g->score.points, g->score.vulnerability );
+  cairo_destroy( ctx );
+}
+
+void drawTinyGameState( Game *g, cairo_surface_t *surface ) {
+  cairo_t *ctx = cairo_create( surface );
+  cairo_scale( ctx, .4, .4 );
+  tinyCenterSanely( g, ctx, cairo_image_surface_get_width( surface ), cairo_image_surface_get_height( surface ));
+
+  cairo_set_line_width( ctx, 3 );
+  cairo_set_source_rgb( ctx, 0, 0, 0 );
+  cairo_paint( ctx );
+
+  drawJustGameStuff( ctx, g );
   drawScore( ctx, g->score.points, g->score.vulnerability );
   cairo_destroy( ctx );
 }

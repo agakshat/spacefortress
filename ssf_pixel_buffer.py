@@ -8,8 +8,8 @@ import ssf
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output', metavar="FILE", default="output.mpg", help="Specify the name of the video file")
-    parser.add_argument('--log', metavar="FILE", default="output.log", help="Specify the name of the log file")
+    parser.add_argument('--output', metavar="FILE", default="output.mpg", help="Specify the name of the video file. (output.mpg)")
+    parser.add_argument('--log', metavar="FILE", default="output.log", help="Specify the name of the log file. (output.log)")
     args = parser.parse_args()
     return args
 
@@ -46,9 +46,13 @@ def play_like_an_idiot(g, last_key):
 if __name__ == "__main__":
     args = parse_args()
     g = ssf.makeExplodeGame()
-    pb = ssf.newPixelBuffer(g, 0, 0)
+    # w = g.contents.config.width
+    # h = g.contents.config.height
+    w = 160
+    h = 192
+    pb = ssf.newPixelBuffer(g, w, h)
     raw_pixels = ssf.get_pixel_buffer_data(pb)
-    pipe = start_ffmpeg(args.output, g.contents.config.width, g.contents.config.height)
+    pipe = start_ffmpeg(args.output, w, h)
 
     ssf.openLog(g, args.log)
 
@@ -58,7 +62,7 @@ if __name__ == "__main__":
         last_key = play_like_an_idiot(g, last_key)
         ssf.stepOneTick(g, 33)
         ssf.logGameState(g)
-        ssf.drawGameState(g, pb)
+        ssf.drawTinyGameState(g, pb)
         pipe.stdin.write(raw_pixels)
 
     pipe.stdin.close()

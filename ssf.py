@@ -249,6 +249,12 @@ _drawGameState.argtypes = [POINTER(Game), c_void_p]
 def drawGameState(game, pb):
     _drawGameState(game, pb.contents.surface)
 
+_drawTinyGameState = dll.drawTinyGameState
+_drawTinyGameState.argtypes = [POINTER(Game), c_void_p]
+
+def drawTinyGameState(game, pb):
+    _drawTinyGameState(game, pb.contents.surface)
+
 def get_pixel_buffer_data(pb):
     print "pb data", pb.contents.raw, pb.contents.height, pb.contents.stride
     return buffer_from_memory(pb.contents.raw, pb.contents.height * pb.contents.stride)

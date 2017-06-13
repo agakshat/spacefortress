@@ -54,7 +54,8 @@ void draw( SDL_Renderer *r, SDL_Texture *t, Game *g ) {
   SDL_LockTexture( t, NULL, &pixels, &pitch );
 
   cairo_surface_t *s = cairo_image_surface_create_for_data( pixels, CAIRO_FORMAT_ARGB32, view.w, view.h, pitch );
-  drawGameState( g, s );
+  drawTinyGameState( g, s );
+
   cairo_surface_destroy( s );
 
   SDL_UnlockTexture( t );
@@ -73,16 +74,21 @@ int main(int argc, char **argv) {
 
   /* int width = g->config.width; */
   /* int height = g->config.height; */
-  int width = 405;
-  int height = 450;
+  /* int width = 405; */
+  /* int height = 450; */
+
+  int width = 160;
+  int height = 192;
+  int scale = 3;
 
   SDL_Init(SDL_INIT_VIDEO);
 
   w = SDL_CreateWindow("Space Fortress",
                        SDL_WINDOWPOS_CENTERED,
                        SDL_WINDOWPOS_CENTERED,
-                       width, height, 0);
+                       width*scale, height*scale, 0);
   r = SDL_CreateRenderer(w, -1, SDL_RENDERER_ACCELERATED);
+  SDL_RenderSetScale( r, scale, scale );
 
   texture = SDL_CreateTexture( r, SDL_PIXELFORMAT_ARGB8888,
                                SDL_TEXTUREACCESS_STREAMING,
