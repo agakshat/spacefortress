@@ -164,17 +164,19 @@ void initHexagon(Hexagon *h, int radius) {
   h->points[4].y = y3;
   h->points[5].x = x2;
   h->points[5].y = y3;
-  h->points[6].x = x1;
-  h->points[6].y = y1;
   h->radius = radius;
 }
 
 bool insideHexagon(const Hexagon *h, const Point *p) {
     int i;
+    /* printf("hex: "); */
+    /* for (i=0; i<6; i++) { printf(" %0.f,%0.f", h->points[i].x, h->points[i].y); } */
+    /* printf("\n"); */
+
     for (i=0; i<6; i++) {
         double nx, ny, dx, dy;
-        nx = -(h->points[i+1].y - h->points[i].y);
-        ny =   h->points[i+1].x - h->points[i].x;
+        nx = -(h->points[(i+1)%6].y - h->points[i].y);
+        ny =   h->points[(i+1)%6].x - h->points[i].x;
         dx = p->x - h->points[i].x;
         dy = p->y - h->points[i].y;
         if (nx * dx + ny * dy < 0) {
