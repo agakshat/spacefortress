@@ -147,7 +147,7 @@ void drawScore( cairo_t *ctx, int pnts, int vlner ) {
   int score_y = 520;
   double start = (710-89*2)/2;
 
-  cairo_set_line_width( ctx, 1 );
+  cairo_set_line_width( ctx, 1.7 );
 
   cairo_rectangle(ctx, start + 0.5, score_y + 0.5, label_width*2, label_height*2);
   cairo_set_source_rgb(ctx, 0, 0, 0);
@@ -206,7 +206,7 @@ void tinyCenterSanely( Game *g, cairo_t *ctx, int sw, int sh ) {
   int pad = 10;
   int ofsx, ofsy;
 
-  ofsx = (sw - g->config.width)/2+120;
+  ofsx = (sw - g->config.width)/2+185;
   ofsy = (sh - g->config.height)/2;
 
   /* printf("use this one %d %d %d %d\n", sh, bighex_height, score_pad, score_height); */
@@ -216,7 +216,7 @@ void tinyCenterSanely( Game *g, cairo_t *ctx, int sw, int sh ) {
     ofsy = sh/2 - (bighex_height + score_pad + score_height)/2 - (g->config.height/2 - bighex_height/2);
   }
 
-  ofsy += 19;
+  ofsy += 71;
   cairo_translate( ctx, ofsx, ofsy );
 }
 
@@ -261,7 +261,21 @@ void drawGameState( Game *g, cairo_surface_t *surface ) {
 
 void drawTinyGameState( Game *g, cairo_surface_t *surface ) {
   cairo_t *ctx = cairo_create( surface );
-  cairo_scale( ctx, .4, .4 );
+  cairo_scale( ctx, .3, .3 );
+  tinyCenterSanely( g, ctx, cairo_image_surface_get_width( surface ), cairo_image_surface_get_height( surface ));
+
+  cairo_set_line_width( ctx, 3 );
+  cairo_set_source_rgb( ctx, 0, 0, 0 );
+  cairo_paint( ctx );
+
+  drawJustGameStuff( ctx, g );
+  drawScore( ctx, g->score.points, g->score.vulnerability );
+  cairo_destroy( ctx );
+}
+
+void drawGameStateScaled( Game *g, cairo_surface_t *surface, float scale) {
+  cairo_t *ctx = cairo_create( surface );
+  cairo_scale( ctx, scale, scale );
   tinyCenterSanely( g, ctx, cairo_image_surface_get_width( surface ), cairo_image_surface_get_height( surface ));
 
   cairo_set_line_width( ctx, 3 );

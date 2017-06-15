@@ -2,6 +2,7 @@ import random
 import argparse
 import subprocess
 import ssf
+import math
 
 # An example of using the pixel buffer from the C space fortress library
 
@@ -45,10 +46,11 @@ def play_like_an_idiot(g, last_key):
 if __name__ == "__main__":
     args = parse_args()
     g = ssf.makeExplodeGame()
-    # w = g.contents.config.width
-    # h = g.contents.config.height
-    w = 160
-    h = 192
+    scale = .25
+    w = int(math.ceil(g.contents.config.width * scale))
+    h = int(math.ceil(g.contents.config.height * scale))
+    # w = 160
+    # h = 192
     pb = ssf.newPixelBuffer(g, w, h)
     raw_pixels = ssf.get_pixel_buffer_data(pb)
     pipe = start_ffmpeg(args.output, w, h)
@@ -61,7 +63,8 @@ if __name__ == "__main__":
         last_key = play_like_an_idiot(g, last_key)
         ssf.stepOneTick(g, 33)
         ssf.logGameState(g)
-        ssf.drawTinyGameState(g, pb)
+        # ssf.drawTinyGameState(g, pb)
+        ssf.drawGameStateScaled(g, pb, scale)
         pipe.stdin.write(raw_pixels)
 
     pipe.stdin.close()
