@@ -1,8 +1,9 @@
 import random
 import argparse
-import subprocess
 import ssf
 import math
+import cv2
+import numpy as np
 
 # An example of using the pixel buffer from the C space fortress library
 
@@ -12,27 +13,6 @@ def parse_args():
     parser.add_argument('--log', metavar="FILE", default="output.log", help="Specify the name of the log file. (output.log)")
     args = parser.parse_args()
     return args
-
-def start_ffmpeg(output_file, width, height):
-    command = ['ffmpeg',
-               # '-loglevel', 'quiet',
-               '-y',
-               '-f', 'rawvideo',
-               '-vcodec', 'rawvideo',
-               '-s', '%dx%d'%(width,height),
-               '-pix_fmt', 'bgra',
-               '-r', '30',
-               '-i', '-',
-               '-an',
-               # '-c:v', 'libx264',
-               # '-preset', 'slow',
-               # '-c:v', 'libxvid',
-               # '-b:v', '3000k',
-               '-c:v', 'mpeg1video',
-               '-b:v', '5000k',
-               output_file]
-    pipe = subprocess.Popen(command, stdin=subprocess.PIPE)
-    return pipe
 
 def play_like_an_idiot(g, last_key):
     keys = [ssf.FIRE_KEY, ssf.THRUST_KEY, ssf.LEFT_KEY, ssf.RIGHT_KEY]
@@ -46,14 +26,14 @@ def play_like_an_idiot(g, last_key):
 if __name__ == "__main__":
     args = parse_args()
     g = ssf.makeExplodeGame()
-    scale = .25
+    scale = .5
     w = int(math.ceil(g.contents.config.width * scale))
     h = int(math.ceil(g.contents.config.height * scale))
-    # w = 160
-    # h = 192
     pb = ssf.newPixelBuffer(g, w, h)
     raw_pixels = ssf.get_pixel_buffer_data(pb)
-    pipe = start_ffmpeg(args.output, w, h)
+
+    fourcc = cv2.cv.CV_FOURCC(*"XVID")
+    out = cv2.VideoWriter('output.avi',fourcc, 30, (w,h))
 
     ssf.openLog(g, args.log)
 
@@ -63,9 +43,10 @@ if __name__ == "__main__":
         last_key = play_like_an_idiot(g, last_key)
         ssf.stepOneTick(g, 33)
         ssf.logGameState(g)
-        # ssf.drawTinyGameState(g, pb)
         ssf.drawGameStateScaled(g, pb, scale)
-        pipe.stdin.write(raw_pixels)
+        src = cv2.cvtColor(np.fromstring(raw_pixels, np.uint8).reshape(h, w, 4), cv2.COLOR_RGBA2RGB)
+        out.write(src)
 
-    pipe.stdin.close()
+    out.release()
+    cv2.destroyAllWindows()
     ssf.closeLog(g)
