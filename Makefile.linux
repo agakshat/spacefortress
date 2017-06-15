@@ -1,8 +1,0 @@
-CC=gcc
-
-FLAGS=-O2 -Wall -g -std=c99 -fpic
-
-CAIRO_LINK_FLAGS=$(shell pkg-config freetype2 --libs) $(shell pkg-config cairo --libs) $(shell pkg-config cairo --cflags)
-SDL2_LINK_FLAGS= -lm $(shell sdl2-config --libs) $(shell sdl2-config --cflags)
-
-LIB_EXT=so
