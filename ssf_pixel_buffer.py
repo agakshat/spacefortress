@@ -26,7 +26,7 @@ def play_like_an_idiot(g, last_key):
 if __name__ == "__main__":
     args = parse_args()
     g = ssf.makeExplodeGame()
-    scale = .5
+    scale = .25
     w = int(math.ceil(g.contents.config.width * scale))
     h = int(math.ceil(g.contents.config.height * scale))
     pb = ssf.newPixelBuffer(g, w, h)

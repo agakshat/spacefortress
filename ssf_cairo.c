@@ -276,9 +276,8 @@ void drawTinyGameState( Game *g, cairo_surface_t *surface ) {
 void drawGameStateScaled( Game *g, cairo_surface_t *surface, float scale) {
   cairo_t *ctx = cairo_create( surface );
   cairo_scale( ctx, scale, scale );
-  tinyCenterSanely( g, ctx, cairo_image_surface_get_width( surface ), cairo_image_surface_get_height( surface ));
 
-  cairo_set_line_width( ctx, 3 );
+  cairo_set_line_width( ctx, 2 );
   cairo_set_source_rgb( ctx, 0, 0, 0 );
   cairo_paint( ctx );
 
