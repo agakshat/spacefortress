@@ -1,11 +1,8 @@
 CC=gcc
 
-CONTRIB_FLAGS=-I/share/volume0/sabetts/ssf/opt/include/ -L/share/volume0/sabetts/ssf/opt/lib
+FLAGS=-O2 -Wall -g -std=c99 -fpic
 
-FT_FLAGS=-I/usr/include/freetype2/
-FLAGS=-O2 -Wall -g -std=c99 $(CONTRIB_FLAGS) $(FT_FLAGS) -fpic
-
-CAIRO_LINK_FLAGS=-lcairo -lpixman-1
-SDL2_LINK_FLAGS=-lSDL2
+CAIRO_LINK_FLAGS=$(shell pkg-config freetype2 --libs) $(shell pkg-config cairo --libs) $(shell pkg-config cairo --cflags)
+SDL2_LINK_FLAGS= -lm $(shell sdl2-config --libs) $(shell sdl2-config --cflags)
 
 LIB_EXT=so

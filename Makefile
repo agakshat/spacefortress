@@ -1,4 +1,10 @@
+UNAME=$(shell uname)
+
+ifeq ($(UNAME), Linux)
 include Makefile.linux
+else ifeq ($(UNAME), Darwin)
+include Makefile.osx
+endif
 
 NAME=ssf
 VERSION=v1
@@ -30,7 +36,7 @@ version.c: FORCE
 	rm -f $@.tmp
 
 %.o: %.c *.c
-	$(CC) $(FLAGS) -c $< -o $@
+	$(CC) $(FLAGS) -c $< -o $@ $(SDL2_LINK_FLAGS) $(CAIRO_LINK_FLAGS)
 
 clean:
 	rm -f *.o ssf libssf.$(LIB_EXT) ssf_cairo libssfcairo.$(LIB_EXT)
