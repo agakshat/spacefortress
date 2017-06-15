@@ -723,8 +723,8 @@ bool logGameStateHeaders(Game *game) {
   if (game->logStream) {
     fprintf(game->logStream, "{");
     /* FIXME: All config variables should be recorded. But how to do that programmatically? */
-    fprintf(game->logStream, "\"version\":%s,", gVersion);
-    fprintf(game->logStream, "\"sha1\":%s,", gGitSha1);
+    fprintf(game->logStream, "\"version\":%s,", GVERSION);
+    fprintf(game->logStream, "\"sha1\":%s,", GGITSHA1);
     fprintf(game->logStream, "\"autoTurn\":%d,", game->config.autoTurn);
     fprintf(game->logStream, "\"bigHex\":%d,", game->config.bigHex);
     fprintf(game->logStream, "\"smallHex\":%d,", game->config.smallHex);
