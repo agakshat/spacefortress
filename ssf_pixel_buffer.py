@@ -32,8 +32,7 @@ if __name__ == "__main__":
     pb = ssf.newPixelBuffer(g, w, h)
     raw_pixels = ssf.get_pixel_buffer_data(pb)
 
-    fourcc = cv2.cv.CV_FOURCC(*"XVID")
-    out = cv2.VideoWriter('output.avi',fourcc, 30, (w,h))
+    out = cv2.VideoWriter('output.avi',cv2.cv.CV_FOURCC(*"MP4V"), 30, (w,h))
 
     ssf.openLog(g, args.log)
 
