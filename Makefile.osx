@@ -1,0 +1,8 @@
+CC=gcc
+FLAGS=-arch x86_64 -O2 -Wall -g
+
+CAIRO_LINK_FLAGS=-framework cairo
+
+SDL2_LINK_FLAGS=-framework SDL2
+
+LIB_EXT=dylib

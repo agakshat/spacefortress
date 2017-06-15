@@ -1,0 +1,11 @@
+CC=gcc
+
+CONTRIB_FLAGS=-I/share/volume0/sabetts/ssf/opt/include/ -L/share/volume0/sabetts/ssf/opt/lib
+
+FT_FLAGS=-I/usr/include/freetype2/
+FLAGS=-O2 -Wall -g -std=c99 $(CONTRIB_FLAGS) $(FT_FLAGS) -fpic
+
+CAIRO_LINK_FLAGS=-lcairo -lpixman-1
+SDL2_LINK_FLAGS=-lSDL2
+
+LIB_EXT=so

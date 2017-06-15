@@ -1,6 +1,5 @@
 import random
 import argparse
-import numpy as np
 import subprocess
 import ssf
 

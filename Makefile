@@ -1,35 +1,25 @@
+include Makefile.linux
+
 NAME=ssf
 VERSION=v1
 BUILD=$(shell git log --pretty=oneline | wc -l | sed 's/ //g')
 SHA1=$(shell git rev-parse -q HEAD)
 FULLNAME=$(NAME)\ $(VERSION).$(BUILD)
 
-CC=gcc
-FLAGS=-arch x86_64 -O2 -Wall -g
+.PHONY: all FORCE clean
 
-OSX_CAIRO_LINK_FLAGS=-framework cairo -framework SDL2
-UNIX_CAIRO_LINK_FLAGS=-lcairo -lsdl2
-CAIRO_LINK_FLAGS=$(OSX_CAIRO_LINK_FLAGS)
-
-OSX_SDL2_LINK_FLAGS=-framework SDL2
-UNIX_SDL2_LINK_FLAGS=-lsdl2
-SDL2_LINK_FLAGS=$(OSX_SDL2_LINK_FLAGS)
-
-
-.PHONY: all FORCE
-
-all: ssf ssf.dylib ssf_cairo ssf_cairo.dylib
+all: ssf libssf.$(LIB_EXT) ssf_cairo libssfcairo.$(LIB_EXT)
 
 ssf: ssf.o ssf_sdl.o version.o
 	$(CC) $(FLAGS) $^ -o $@ $(SDL2_LINK_FLAGS)
 
-ssf.dylib: ssf.o version.o
-	$(CC) $(FLAGS) -shared $^ -o $@ #  -fpic
+libssf.$(LIB_EXT): ssf.o version.o
+	$(CC) $(FLAGS) -shared $^ -o $@
 
 ssf_cairo: ssf.o ssf_cairo.o ssf_cairo_sdl.o version.o
 	$(CC) $(FLAGS) $^ -o $@ $(SDL2_LINK_FLAGS) $(CAIRO_LINK_FLAGS)
 
-ssf_cairo.dylib: ssf.o ssf_cairo.o version.o
+libssfcairo.$(LIB_EXT): ssf.o ssf_cairo.o version.o
 	$(CC) $(FLAGS) -shared $^ -o $@ $(CAIRO_LINK_FLAGS)
 
 version.c: FORCE
@@ -41,3 +31,6 @@ version.c: FORCE
 
 %.o: %.c *.c
 	$(CC) $(FLAGS) -c $< -o $@
+
+clean:
+	rm -f *.o ssf libssf.$(LIB_EXT) ssf_cairo libssfcairo.$(LIB_EXT)

@@ -11,5 +11,8 @@ ssf_cairo.dylib.dSYM/
 ssf_cairo.dylib
 *.pyc
 *.o
+*.so
+*.dylib
+*~
 data/
 version.c

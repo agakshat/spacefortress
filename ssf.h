@@ -9,6 +9,10 @@
 
 #include "version.h"
 
+#ifndef M_PI
+#define M_PI           3.14159265358979323846
+#endif
+
 #define MAX_EVENTS 50
 #define MAX_KEY_EVENTS 50
 #define MAX_MISSILES 50

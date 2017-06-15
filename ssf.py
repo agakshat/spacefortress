@@ -1,11 +1,12 @@
+import os.path
 from ctypes import *
 from ctypes.util import find_library
 
 __all__ = []
 
 try:
-    # dll = cdll.LoadLibrary(find_library("ssf"))
-    dll = cdll.LoadLibrary(find_library("ssf_cairo"))
+    dll_name = "libssfcairo.so"
+    dll = cdll.LoadLibrary(os.path.join(os.path.dirname(os.path.realpath(__file__)), dll_name))
 except RuntimeError as exc:
     raise ImportError(exc)
 
