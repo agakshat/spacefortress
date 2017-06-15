@@ -148,13 +148,13 @@ double angleTo(const Point *p1, const Point *p2) {
 }
 
 void initHexagon(Hexagon *h, int radius) {
-  double x1 = floor(355-radius);
-  double x2 = floor(355-radius*0.5);
-  double x3 = floor(355+radius*0.5);
-  double x4 = floor(355+radius);
-  double y1 = 315;
-  double y2 = floor(315-radius*sin(M_PI*2/3));
-  double y3 = floor(315+radius*sin(M_PI*2/3));
+  double x1 = floor(270-radius);
+  double x2 = floor(270-radius*0.5);
+  double x3 = floor(270+radius*0.5);
+  double x4 = floor(270+radius);
+  double y1 = 245;
+  double y2 = floor(245-radius*sin(M_PI*2/3));
+  double y3 = floor(245+radius*sin(M_PI*2/3));
   h->points[0].x = x1;
   h->points[0].y = y1;
   h->points[1].x = x2;
@@ -487,8 +487,8 @@ bool isGameOver(Game *game) {
 }
 
 void baseConfig(Config *config) {
-  config->width = 710;
-  config->height = 626;
+  config->width = 540;
+  config->height = 580;
   config->gameTime = 180000;
   /* Points */
   config->destroyFortress = 100;
@@ -513,8 +513,8 @@ void baseConfig(Config *config) {
   config->ship.turnSpeed = 6;
   config->ship.acceleration = 0.3;
   config->ship.collisionRadius = 10;
-  config->ship.startPosition.x = 235;
-  config->ship.startPosition.y = 315;
+  config->ship.startPosition.x = 150;
+  config->ship.startPosition.y = 245;
   config->ship.startVelocity.x = cos(rad(60));
   config->ship.startVelocity.y = sin(rad(60));
   config->ship.startAngle = 0;
@@ -544,8 +544,8 @@ void initGame(Game *game) {
 
   game->fortress.o.alive = true;
   game->fortress.o.collisionRadius = game->config.fortress.collisionRadius;
-  game->fortress.o.position.x = 355;
-  game->fortress.o.position.y = 315;
+  game->fortress.o.position.x = 270;
+  game->fortress.o.position.y = 245;
   game->fortress.o.angle = 0;
   game->fortress.lastAngle = 0;
 

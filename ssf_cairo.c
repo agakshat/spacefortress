@@ -144,8 +144,8 @@ void drawScore( cairo_t *ctx, int pnts, int vlner ) {
   int label_width = 89;
   int label_height = 32;
   /* int pad = 16; */
-  int score_y = 520;
-  double start = (710-89*2)/2;
+  int score_y = 504;
+  double start = (540-89*2)/2;
 
   cairo_set_line_width( ctx, 1.7 );
 
@@ -275,7 +275,8 @@ void drawTinyGameState( Game *g, cairo_surface_t *surface ) {
 
 void drawGameStateScaled( Game *g, cairo_surface_t *surface, float scale) {
   cairo_t *ctx = cairo_create( surface );
-  cairo_scale( ctx, scale, scale );
+  if ( scale < 1 )
+    cairo_scale( ctx, scale, scale );
 
   cairo_set_line_width( ctx, 2 );
   cairo_set_source_rgb( ctx, 0, 0, 0 );
