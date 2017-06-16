@@ -1,3 +1,6 @@
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)),"../"))
+
 import random
 import argparse
 import ssf
@@ -38,7 +41,8 @@ if __name__ == "__main__":
     print(w,h)
     pb = ssf.newPixelBuffer(g, w, h)
     raw_pixels = ssf.get_pixel_buffer_data(pb)
-
+    ssf.drawGameStateScaled(g, pb, scale)
+    cv2.imwrite("output.png", cv2.cvtColor(np.fromstring(raw_pixels, np.uint8).reshape(h, w, 4), cv2.COLOR_RGBA2RGB))
     out = cv2.VideoWriter(args.output ,cv2.VideoWriter_fourcc(*"H264"), 30, (w,h))
 
     ssf.openLog(g, args.log)
