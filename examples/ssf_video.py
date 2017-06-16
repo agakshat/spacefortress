@@ -8,9 +8,10 @@ import numpy as np
 # An example of using the pixel buffer from the C space fortress library
 
 def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--output', metavar="FILE", default="output.mpg", help="Specify the name of the video file. (output.mpg)")
-    parser.add_argument('--log', metavar="FILE", default="output.log", help="Specify the name of the log file. (output.log)")
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--output', default="output.avi", help="Specify the name of the video file.")
+    parser.add_argument('--log',  default="output.log", help="Specify the name of the log file.")
+    parser.add_argument('--scale', default=1, help="Scale of output image", type=float)
     args = parser.parse_args()
     return args
 
@@ -26,13 +27,14 @@ def play_like_an_idiot(g, last_key):
 if __name__ == "__main__":
     args = parse_args()
     g = ssf.makeExplodeGame()
-    scale = .5
+    scale = args.scale
     w = int(math.ceil(g.contents.config.width * scale))
     h = int(math.ceil(g.contents.config.height * scale))
+    print(w,h)
     pb = ssf.newPixelBuffer(g, w, h)
     raw_pixels = ssf.get_pixel_buffer_data(pb)
 
-    out = cv2.VideoWriter('output.avi',cv2.cv.CV_FOURCC(*"MP4V"), 30, (w,h))
+    out = cv2.VideoWriter(args.output ,cv2.VideoWriter_fourcc(*"H264"), 30, (w,h))
 
     ssf.openLog(g, args.log)
 
