@@ -9,6 +9,7 @@ import numpy as np
 
 def parse_args():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--game', choices=["explode","autoturn"], default="explode", help="Game type.")
     parser.add_argument('--output', default="output.avi", help="Specify the name of the video file.")
     parser.add_argument('--log',  default="output.log", help="Specify the name of the log file.")
     parser.add_argument('--scale', default=1, help="Scale of output image", type=float)
@@ -26,7 +27,11 @@ def play_like_an_idiot(g, last_key):
 
 if __name__ == "__main__":
     args = parse_args()
-    g = ssf.makeExplodeGame()
+    print(args.game)
+    if args.game == "explode":
+        g = ssf.makeExplodeGame()
+    elif args.game == "autoturn":
+        g = ssf.makeAutoTurnGame()
     scale = args.scale
     w = int(math.ceil(g.contents.config.width * scale))
     h = int(math.ceil(g.contents.config.height * scale))
