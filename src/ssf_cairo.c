@@ -145,7 +145,7 @@ void drawScore( cairo_t *ctx, int pnts, int vlner ) {
   int label_height = 32;
   /* int pad = 16; */
   int score_y = 504;
-  double start = (540-89*2)/2;
+  double start = (580-89*2)/2;
 
   cairo_set_line_width( ctx, 1.7 );
 
