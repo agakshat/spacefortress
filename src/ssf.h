@@ -150,6 +150,7 @@ typedef struct {
   Hexagon bigHex, smallHex;
   Score score;
   Stats stats;
+  int reward;
 
   int tick, time;
   Collisions collisions;

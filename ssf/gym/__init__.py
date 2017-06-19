@@ -71,6 +71,7 @@ class SSF_Env(gym.Env):
             else:
                 ssf.releaseKey(self.g, ssf.RIGHT_KEY)
         ssf.stepOneTick(self.g, self.tickdur)
+        reward = self.g.reward
         ssf.drawGameStateScaled(self.g, self.pb, self.scale)
         self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2RGB)
         done = ssf.isGameOver(self.g)

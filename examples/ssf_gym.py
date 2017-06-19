@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 
 if __name__ == '__main__':
-    env = ssf.gym.SSF_Env(gametype="explode")
+    env = ssf.gym.SSF_Env(gametype="explode", scale=.25)
     state = env.reset()
     out = cv2.VideoWriter("gym.avi" ,cv2.VideoWriter_fourcc(*"H264"), env.metadata['video.frames_per_second'], (env.w,env.h))
     out.write(state)

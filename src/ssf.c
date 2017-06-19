@@ -228,6 +228,7 @@ void playSound(Sound s) {
 }
 
 void reward(Game *game, int amount) {
+  game->reward += amount;
   game->score.rawPoints += amount;
   game->score.points += amount;
   if (game->score.points < 0) game->score.points = 0;
@@ -471,6 +472,7 @@ void updateTime(Game *game, int ms) {
 }
 
 void stepOneTick(Game *game, int ms) {
+  game->reward = 0;
   updateTime(game, ms);
   resetTick(game);
   processKeyState(game);
