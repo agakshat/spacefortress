@@ -546,7 +546,7 @@ void initGame(Game *game) {
   game->fortress.o.collisionRadius = game->config.fortress.collisionRadius;
   game->fortress.o.position.x = 290;
   game->fortress.o.position.y = 245;
-  game->fortress.o.angle = 0;
+  game->fortress.o.angle = 180;
   game->fortress.lastAngle = 0;
 
   for (int i=0; i<MAX_MISSILES; i++) { game->missiles[i].o.alive = false; }
