@@ -16,6 +16,7 @@ def parse_args():
     parser.add_argument('--output', default="output.avi", help="Specify the name of the video file.")
     parser.add_argument('--log',  default="output.log", help="Specify the name of the log file.")
     parser.add_argument('--scale', default=1, help="Scale of output image", type=float)
+    parser.add_argument('--linesize', default=2, help="Scale of output image", type=float)
     args = parser.parse_args()
     return args
 
@@ -41,7 +42,7 @@ if __name__ == "__main__":
     print(w,h)
     pb = ssf.newPixelBuffer(g, w, h)
     raw_pixels = ssf.get_pixel_buffer_data(pb)
-    ssf.drawGameStateScaled(g, pb, scale)
+    ssf.drawGameStateScaled(g, pb, scale, args.linesize)
     cv2.imwrite("output.png", cv2.cvtColor(np.fromstring(raw_pixels, np.uint8).reshape(h, w, 4), cv2.COLOR_RGBA2RGB))
     out = cv2.VideoWriter(args.output ,cv2.VideoWriter_fourcc(*"H264"), 30, (w,h))
 
@@ -53,7 +54,7 @@ if __name__ == "__main__":
         last_key = play_like_an_idiot(g, last_key)
         ssf.stepOneTick(g, 33)
         ssf.logGameState(g)
-        ssf.drawGameStateScaled(g, pb, scale)
+        ssf.drawGameStateScaled(g, pb, scale, args.linesize)
         src = cv2.cvtColor(np.fromstring(raw_pixels, np.uint8).reshape(h, w, 4), cv2.COLOR_RGBA2RGB)
         out.write(src)
 

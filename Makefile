@@ -12,5 +12,7 @@ build/lib.*/$(TARGET):
 	python setup.py build_ext
 
 clean:
-	rm -f ssf/*.so
 	rm -rf build dist
+	rm -f `find . -name "*.pyc"`
+	rm -f `find . -name "*.so"`
+	rm -f *.avi *.log *.h5f *.png

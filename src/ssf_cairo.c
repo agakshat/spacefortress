@@ -70,8 +70,6 @@ PixelBuffer* newPixelBuffer( Game* g, int width, int height ) {
   pb->height = cairo_image_surface_get_height( pb->surface );
   pb->stride = cairo_image_surface_get_stride( pb->surface );
 
-  printf("new pb: %p %d %d : %d\n", pb->raw, pb->height, pb->stride, ((char *)pb->raw)[10]);
-
   return pb;
 }
 
@@ -105,9 +103,9 @@ void drawHexagon( cairo_t *ctx, Hexagon *h ) {
   cairo_stroke( ctx );
 }
 
-void drawExplosion( cairo_t *ctx, const Point* p ) {
+void drawExplosion( cairo_t *ctx, const Point* p, float ls ) {
   /* cairo_set_line_width( ctx, 1.4 ); */
-  cairo_set_line_width( ctx, 2 );
+  cairo_set_line_width( ctx, ls );
   int ofs = 0;
   for( int radius=15; radius<70; radius += 8 ) {
     ofs += 3;
@@ -140,14 +138,14 @@ void centeredText(cairo_t *ctx, char *text, int x, int y) {
   cairo_show_text(ctx, text);
 }
 
-void drawScore( cairo_t *ctx, int pnts, int vlner ) {
+void drawScore( cairo_t *ctx, int pnts, int vlner, float ls ) {
   int label_width = 89;
   int label_height = 32;
   /* int pad = 16; */
   int score_y = 504;
   double start = (580-89*2)/2;
 
-  cairo_set_line_width( ctx, 1.7 );
+  cairo_set_line_width( ctx, ls-0.3 );
 
   cairo_rectangle(ctx, start + 0.5, score_y + 0.5, label_width*2, label_height*2);
   cairo_set_source_rgb(ctx, 0, 0, 0);
@@ -220,19 +218,19 @@ void tinyCenterSanely( Game *g, cairo_t *ctx, int sw, int sh ) {
   cairo_translate( ctx, ofsx, ofsy );
 }
 
-void drawJustGameStuff( cairo_t *ctx, Game *g ) {
+void drawJustGameStuff( cairo_t *ctx, Game *g, float ls ) {
   drawHexagon( ctx, &g->bigHex );
   drawHexagon( ctx, &g->smallHex );
 
   if( g->ship.o.alive ) {
     drawWireFrame( ctx, &shipWireFrame, &g->ship.o.position, g->ship.o.angle );
   } else {
-    drawExplosion( ctx, &g->ship.o.position );
+    drawExplosion( ctx, &g->ship.o.position, ls );
   }
   if( g->fortress.o.alive ) {
     drawWireFrame( ctx, &fortressWireFrame, &g->fortress.o.position, g->fortress.o.angle );
   } else {
-    drawExplosion( ctx, &g->fortress.o.position );
+    drawExplosion( ctx, &g->fortress.o.position, ls );
   }
   for (int i=0; i<MAX_MISSILES; i++) {
     if (g->missiles[i].o.alive) {
@@ -254,8 +252,8 @@ void drawGameState( Game *g, cairo_surface_t *surface ) {
   cairo_set_source_rgb( ctx, 0, 0, 0 );
   cairo_paint( ctx );
 
-  drawJustGameStuff( ctx, g );
-  drawScore( ctx, g->score.points, g->score.vulnerability );
+  drawJustGameStuff( ctx, g, 2 );
+  drawScore( ctx, g->score.points, g->score.vulnerability, 1.7 );
   cairo_destroy( ctx );
 }
 
@@ -268,21 +266,21 @@ void drawTinyGameState( Game *g, cairo_surface_t *surface ) {
   cairo_set_source_rgb( ctx, 0, 0, 0 );
   cairo_paint( ctx );
 
-  drawJustGameStuff( ctx, g );
-  drawScore( ctx, g->score.points, g->score.vulnerability );
+  drawJustGameStuff( ctx, g, 2 );
+  drawScore( ctx, g->score.points, g->score.vulnerability, 1.7 );
   cairo_destroy( ctx );
 }
 
-void drawGameStateScaled( Game *g, cairo_surface_t *surface, float scale) {
+void drawGameStateScaled( Game *g, cairo_surface_t *surface, float scale, float ls) {
   cairo_t *ctx = cairo_create( surface );
   if ( scale < 1 )
     cairo_scale( ctx, scale, scale );
 
-  cairo_set_line_width( ctx, 2 );
+  cairo_set_line_width( ctx, ls );
   cairo_set_source_rgb( ctx, 0, 0, 0 );
   cairo_paint( ctx );
 
-  drawJustGameStuff( ctx, g );
-  drawScore( ctx, g->score.points, g->score.vulnerability );
+  drawJustGameStuff( ctx, g, ls );
+  drawScore( ctx, g->score.points, g->score.vulnerability, ls );
   cairo_destroy( ctx );
 }

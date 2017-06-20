@@ -557,6 +557,8 @@ void initGame(Game *game) {
   initHexagon(&game->bigHex, game->config.bigHex);
   initHexagon(&game->smallHex, game->config.smallHex);
 
+  game->reward = 0;
+
   game->score.points = 0;
   game->score.rawPoints = 0;
   game->score.vulnerability = 0;
