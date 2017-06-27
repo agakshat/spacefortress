@@ -17,6 +17,7 @@ def parse_args():
     parser.add_argument('--log',  default="output.log", help="Specify the name of the log file.")
     parser.add_argument('--scale', default=1, help="Scale of output image", type=float)
     parser.add_argument('--linesize', default=2, help="Scale of output image", type=float)
+    parser.add_argument('--grayscale', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -33,9 +34,9 @@ if __name__ == "__main__":
     args = parse_args()
     print(args.game)
     if args.game == "explode":
-        g = ssf.makeExplodeGame()
+        g = ssf.makeExplodeGame(args.grayscale)
     elif args.game == "autoturn":
-        g = ssf.makeAutoTurnGame()
+        g = ssf.makeAutoTurnGame(args.grayscale)
     scale = args.scale
     w = int(math.ceil(g.contents.config.width * scale))
     h = int(math.ceil(g.contents.config.height * scale))
@@ -55,7 +56,7 @@ if __name__ == "__main__":
         ssf.stepOneTick(g, 33)
         ssf.logGameState(g)
         ssf.drawGameStateScaled(g, pb, scale, args.linesize)
-        src = cv2.cvtColor(np.fromstring(raw_pixels, np.uint8).reshape(h, w, 4), cv2.COLOR_RGBA2RGB)
+        src = cv2.cvtColor(cv2.cvtColor(np.fromstring(raw_pixels, np.uint8).reshape(h, w, 4), cv2.COLOR_RGBA2GRAY), cv2.COLOR_GRAY2RGB)
         out.write(src)
 
     out.release()

@@ -25,8 +25,8 @@ import ssf.gym
 import cv2
 import numpy as np
 
-INPUT_SHAPE = (124, 124)
-WINDOW_LENGTH = 4
+INPUT_SHAPE = (84, 84)
+WINDOW_LENGTH = 8
 
 EPISODE_LENGTH = int(5295/2)
 
@@ -82,12 +82,13 @@ class SSFProcessor(Processor):
         processed_batch = batch.astype('float32') / 255.
         return processed_batch
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('--mode', choices=["train","test"], default="train")
 parser.add_argument('--weights', type=str, default=None)
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
-env = ssf.gym.SSF_Env(gametype="explode", scale=.213, ls=3)
+env = ssf.gym.SSF_Env(gametype="explode", scale=.2, ls=3)
 np.random.seed(123)
 env.seed(123)
 nb_actions = env.action_space.n
@@ -126,7 +127,7 @@ processor = SSFProcessor()
 # the agent initially explores the environment (high eps) and then gradually sticks to what it knows
 # (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
 # so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
-policy = EpochLinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.01, value_test=.001, nb_epochs=100)
+policy = EpochLinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1, value_min=.1, value_test=.01, nb_epochs=1000)
 
 # The trade-off between exploration and exploitation is difficult and an on-going research topic.
 # If you want, you can experiment with the parameters or use a different policy. Another popular one
@@ -137,7 +138,7 @@ policy = EpochLinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2,
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, test_policy=policy, memory=memory,
                processor=processor, nb_steps_warmup=50000, gamma=.99, target_model_update=10000,
                train_interval=4, delta_clip=1.)
-dqn.compile(Adam(lr=.00025), metrics=['mae'])
+dqn.compile(Adam(lr=.00015), metrics=['mae'])
 
 # Okay, now it's time to learn something! We capture the interrupt exception so that training
 # can be prematurely aborted. Notice that you can the built-in Keras callbacks!
@@ -145,12 +146,19 @@ weights_filename = 'ssf_dqn_weights.h5f'
 log_filename = 'ssf_dqn_log.json'
 callbacks = []
 
-while True:
-    env.videofile = None
-    dqn.fit(env, callbacks=callbacks, nb_steps=EPISODE_LENGTH*10, log_interval=10000, verbose=2, action_repetition=2, nb_max_episode_steps=EPISODE_LENGTH)
-    dqn.nb_steps_warmup = 0
-    # After training is done, we save the final weights one more time.
-    dqn.save_weights(weights_filename, overwrite=True)
-    # Finally, evaluate our algorithm for 10 episodes.
-    env.videofile = 'ssf_dqn_epoch-%d' % dqn.epoch
+if args.mode == 'train':
+    while True:
+        env.videofile = None
+        dqn.fit(env, callbacks=callbacks, nb_steps=EPISODE_LENGTH*10, log_interval=10000, verbose=2, action_repetition=2, nb_max_episode_steps=EPISODE_LENGTH)
+        dqn.nb_steps_warmup = 0
+        # After training is done, we save the final weights one more time.
+        dqn.save_weights(weights_filename, overwrite=True)
+        # Finally, evaluate our algorithm for 10 episodes.
+        env.videofile = 'ssf_dqn_epoch-%d' % dqn.epoch
+        dqn.test(env, nb_episodes=1, visualize=False)
+elif args.mode == 'test':
+    if args.weights:
+        weights_filename = args.weights
+    dqn.load_weights(weights_filename)
+    env.videofile = 'ssf_dqn_test'
     dqn.test(env, nb_episodes=1, visualize=False)

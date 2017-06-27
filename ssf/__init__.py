@@ -185,11 +185,19 @@ shellWireFrame = WireFrame.in_dll(dll, "shellWireFrame")
 shipWireFrame = WireFrame.in_dll(dll, "shipWireFrame")
 fortressWireFrame = WireFrame.in_dll(dll, "fortressWireFrame")
 
-makeExplodeGame = dll.makeExplodeGame
-makeExplodeGame.restype = POINTER(Game)
+_makeExplodeGame = dll.makeExplodeGame
+_makeExplodeGame.argtypes = [c_bool]
+_makeExplodeGame.restype = POINTER(Game)
 
-makeAutoTurnGame = dll.makeAutoTurnGame
-makeAutoTurnGame.restype = POINTER(Game)
+def makeExplodeGame(grayscale=False):
+    return _makeExplodeGame(grayscale)
+
+_makeAutoTurnGame = dll.makeAutoTurnGame
+_makeAutoTurnGame.argtypes = [c_bool]
+_makeAutoTurnGame.restype = POINTER(Game)
+
+def makeAutoTurnGame(grayscale=False):
+    return _makeAutoTurnGame(grayscale)
 
 freeGame = dll.freeGame
 freeGame.argtypes = [POINTER(Game)]
@@ -244,18 +252,6 @@ newPixelBuffer.restype = POINTER(PixelBuffer)
 
 freePixelBuffer = dll.freePixelBuffer
 freePixelBuffer.argtypes = [POINTER(PixelBuffer)]
-
-_drawGameState = dll.drawGameState
-_drawGameState.argtypes = [POINTER(Game), c_void_p]
-
-def drawGameState(game, pb):
-    _drawGameState(game, pb.contents.surface)
-
-_drawTinyGameState = dll.drawTinyGameState
-_drawTinyGameState.argtypes = [POINTER(Game), c_void_p]
-
-def drawTinyGameState(game, pb):
-    _drawTinyGameState(game, pb.contents.surface)
 
 _drawGameStateScaled = dll.drawGameStateScaled
 _drawGameStateScaled.argtypes = [POINTER(Game), c_void_p, c_float, c_float]

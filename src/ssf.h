@@ -115,7 +115,7 @@ typedef struct {
   int width, height;
   int gameTime;
   /* Points */
-  int destroyFortress, shipDeathPenalty, missilePenalty;
+  int destroyFortress, shipDeathPenalty, missilePenalty, hitReward;
   struct {
     int speed;
     int collisionRadius;
@@ -151,6 +151,7 @@ typedef struct {
   Score score;
   Stats stats;
   int reward;
+  bool grayscale;
 
   int tick, time;
   Collisions collisions;
@@ -180,8 +181,8 @@ void releaseKey(Game *game, KeySym sym);
 void stepOneTick(Game *game, int ms);
 bool isGameOver(Game *game);
 
-Game* makeAutoTurnGame();
-Game* makeExplodeGame();
+Game* makeAutoTurnGame(bool grayscale);
+Game* makeExplodeGame(bool grayscale);
 void freeGame(Game *game);
 
 void dumpSexpGameState(Game *game, char *buf, size_t size);

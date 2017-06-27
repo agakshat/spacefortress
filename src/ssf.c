@@ -148,13 +148,13 @@ double angleTo(const Point *p1, const Point *p2) {
 }
 
 void initHexagon(Hexagon *h, int radius) {
-  double x1 = floor(290-radius);
-  double x2 = floor(290-radius*0.5);
-  double x3 = floor(290+radius*0.5);
-  double x4 = floor(290+radius);
-  double y1 = 245;
-  double y2 = floor(245-radius*sin(M_PI*2/3));
-  double y3 = floor(245+radius*sin(M_PI*2/3));
+  double x1 = floor(210-radius);
+  double x2 = floor(210-radius*0.5);
+  double x3 = floor(210+radius*0.5);
+  double x4 = floor(210+radius);
+  double y1 = 210;
+  double y2 = floor(210-radius*sin(M_PI*2/3));
+  double y3 = floor(210+radius*sin(M_PI*2/3));
   h->points[0].x = x1;
   h->points[0].y = y1;
   h->points[1].x = x2;
@@ -290,7 +290,6 @@ void fireMissile(Game *game) {
         game->missiles[i].o.velocity.x = game->config.missile.speed * cos(rad(game->ship.o.angle));
         game->missiles[i].o.velocity.y = -game->config.missile.speed * sin(rad(game->ship.o.angle));
 
-        penalize(game, game->config.missilePenalty);
         playSound(FIRE_MISSILE_SOUND);
         addEvent(game, MISSILE_FIRED_EVENT);
         return;
@@ -327,22 +326,36 @@ void updateFortress(Game *game) {
 void processKeyState (Game *game) {
   int i;
   maybeResetKeyEvents(game);
+  bool newTurn = false;
   for(i=0; i<game->keys.eventCount; i++) {
     if (game->keys.events[i].state == true) {
       if (game->keys.events[i].sym == LEFT_KEY) {
+        if (game->ship.turnFlag == NO_TURN) newTurn = true;
         game->ship.turnFlag = TURN_LEFT;
+        game->keys.left = true;
       } else if (game->keys.events[i].sym == RIGHT_KEY) {
+        if (game->ship.turnFlag == NO_TURN) newTurn = true;
         game->ship.turnFlag = TURN_RIGHT;
+        game->keys.right = true;
       } else if (game->keys.events[i].sym == THRUST_KEY) {
         game->ship.thrustFlag = true;
+        game->keys.thrust = true;
       } else if (game->keys.events[i].sym == FIRE_KEY) {
+        game->keys.fire = true;
         fireMissile(game);
       }
     } else {
-      if (game->keys.events[i].sym == LEFT_KEY || game->keys.events[i].sym == RIGHT_KEY) {
+      if (!newTurn && (game->keys.events[i].sym == LEFT_KEY || game->keys.events[i].sym == RIGHT_KEY)) {
+        if (game->keys.events[i].sym == LEFT_KEY)
+          game->keys.left = false;
+        else
+          game->keys.right = false;
         game->ship.turnFlag = NO_TURN;
       } else if (game->keys.events[i].sym == THRUST_KEY) {
         game->ship.thrustFlag = false;
+        game->keys.thrust = false;
+      } else if (game->keys.events[i].sym == FIRE_KEY) {
+        game->keys.fire = false;
       }
     }
   }
@@ -401,6 +414,8 @@ void updateMissiles(Game *game) {
         addEvent(game, HIT_FORTRESS_EVENT);
         if (game->fortress.o.alive) {
           if (game->fortress.vulnerabilityTimer >= game->config.fortress.vulnerabilityTime) {
+            if (game->score.vulnerability < 10)
+              reward(game, game->config.hitReward);
             game->score.vulnerability += 1;
             addEvent(game, VLNER_INCREASED_EVENT);
           } else {
@@ -411,6 +426,7 @@ void updateMissiles(Game *game) {
               playSound(EXPLOSION_SOUND);
               addEvent(game, FORTRESS_DESTROYED_EVENT);
             } else {
+              penalize(game, game->config.hitReward * game->score.vulnerability);
               playSound(VLNER_RESET_SOUND);
               addEvent(game, VLNER_RESET_EVENT);
             }
@@ -419,6 +435,7 @@ void updateMissiles(Game *game) {
           game->fortress.vulnerabilityTimer = 0;
         }
       } else if (isOutsideGameArea(game, &game->missiles[i].o.position)) {
+        penalize(game, game->config.missilePenalty);
         game->missiles[i].o.alive = false;
       }
     }
@@ -489,13 +506,14 @@ bool isGameOver(Game *game) {
 }
 
 void baseConfig(Config *config) {
-  config->width = 580;
-  config->height = 580;
+  config->width = 420;
+  config->height = 420;
   config->gameTime = 180000;
   /* Points */
   config->destroyFortress = 100;
-  config->shipDeathPenalty = 100;
+  config->shipDeathPenalty = 50;
   config->missilePenalty = 2;
+  config->hitReward = 1;
   /* Projectiles */
   config->shell.collisionRadius = 3;
   config->shell.speed = 6;
@@ -515,8 +533,8 @@ void baseConfig(Config *config) {
   config->ship.turnSpeed = 6;
   config->ship.acceleration = 0.3;
   config->ship.collisionRadius = 10;
-  config->ship.startPosition.x = 170;
-  config->ship.startPosition.y = 245;
+  config->ship.startPosition.x = 110;
+  config->ship.startPosition.y = 210;
   config->ship.startVelocity.x = cos(rad(60));
   config->ship.startVelocity.y = sin(rad(60));
   config->ship.startAngle = 0;
@@ -546,8 +564,8 @@ void initGame(Game *game) {
 
   game->fortress.o.alive = true;
   game->fortress.o.collisionRadius = game->config.fortress.collisionRadius;
-  game->fortress.o.position.x = 290;
-  game->fortress.o.position.y = 245;
+  game->fortress.o.position.x = 210;
+  game->fortress.o.position.y = 210;
   game->fortress.o.angle = 180;
   game->fortress.lastAngle = 0;
 
@@ -559,6 +577,8 @@ void initGame(Game *game) {
 
   game->reward = 0;
 
+  game->grayscale = false;
+
   game->score.points = 0;
   game->score.rawPoints = 0;
   game->score.vulnerability = 0;
@@ -569,21 +589,23 @@ void initGame(Game *game) {
   resetTick(game);
 }
 
-Game* makeAutoTurnGame() {
+Game* makeAutoTurnGame(bool grayscale) {
   Game *g = malloc(sizeof(Game));
   memset((void *)g, 0, sizeof(Game));
   if (g != NULL) {
     autoTurnConfig(&g->config);
     initGame(g);
+    g->grayscale = grayscale;
   }
   return g;
 }
 
-Game* makeExplodeGame() {
+Game* makeExplodeGame(bool grayscale) {
   Game *g = malloc(sizeof(Game));
   if (g != NULL) {
     explodeConfig(&g->config);
     initGame(g);
+    g->grayscale = grayscale;
   }
   return g;
 }
