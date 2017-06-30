@@ -155,25 +155,25 @@ void drawScore( cairo_t *ctx, int pnts, int vlner, float ls, bool left, bool rig
 
   cairo_set_line_width( ctx, ls-1 );
 
-  if (left)
+  if (fire)
     cairo_set_source_rgb(ctx, .75, .75, .75);
   else
     cairo_set_source_rgb(ctx, .25, .25, .25);
   cairo_rectangle(ctx, start-87.5, score_y-195, 25, 10);
   cairo_fill(ctx);
-  if (right)
+  if (thrust)
     cairo_set_source_rgb(ctx, .75, .75, .75);
   else
     cairo_set_source_rgb(ctx, .25, .25, .25);
   cairo_rectangle(ctx, start-37.5, score_y-195, 25, 10);
   cairo_fill(ctx);
-  if (thrust)
+  if (left)
     cairo_set_source_rgb(ctx, .75, .75, .75);
   else
     cairo_set_source_rgb(ctx, .25, .25, .25);
   cairo_rectangle(ctx, start+12.5, score_y-195, 25, 10);
   cairo_fill(ctx);
-  if (fire)
+  if (right)
     cairo_set_source_rgb(ctx, .75, .75, .75);
   else
     cairo_set_source_rgb(ctx, .25, .25, .25);

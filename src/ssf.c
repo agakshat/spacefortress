@@ -147,6 +147,10 @@ double angleTo(const Point *p1, const Point *p2) {
   return deg(a);
 }
 
+int triangularNumber(int n) {
+  return n * (n + 1) / 2;
+}
+
 void initHexagon(Hexagon *h, int radius) {
   double x1 = floor(210-radius);
   double x2 = floor(210-radius*0.5);
@@ -414,9 +418,9 @@ void updateMissiles(Game *game) {
         addEvent(game, HIT_FORTRESS_EVENT);
         if (game->fortress.o.alive) {
           if (game->fortress.vulnerabilityTimer >= game->config.fortress.vulnerabilityTime) {
-            if (game->score.vulnerability < 10)
-              reward(game, game->config.hitReward);
             game->score.vulnerability += 1;
+            if (game->score.vulnerability < 11)
+              reward(game, triangularNumber(game->score.vulnerability));
             addEvent(game, VLNER_INCREASED_EVENT);
           } else {
             if (game->score.vulnerability >= game->config.fortress.vulnerabilityThreshold + 1) {
@@ -426,7 +430,7 @@ void updateMissiles(Game *game) {
               playSound(EXPLOSION_SOUND);
               addEvent(game, FORTRESS_DESTROYED_EVENT);
             } else {
-              penalize(game, game->config.hitReward * game->score.vulnerability);
+              penalize(game, triangularNumber(game->score.vulnerability));
               playSound(VLNER_RESET_SOUND);
               addEvent(game, VLNER_RESET_EVENT);
             }
@@ -510,9 +514,9 @@ void baseConfig(Config *config) {
   config->height = 420;
   config->gameTime = 180000;
   /* Points */
-  config->destroyFortress = 100;
+  config->destroyFortress = 500;
   config->shipDeathPenalty = 50;
-  config->missilePenalty = 2;
+  config->missilePenalty = 5;
   config->hitReward = 1;
   /* Projectiles */
   config->shell.collisionRadius = 3;
