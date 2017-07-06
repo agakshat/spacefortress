@@ -1,3 +1,5 @@
+import pyglet
+
 import numpy as np
 import gym
 from gym import spaces
@@ -10,6 +12,31 @@ logger = logging.getLogger(__name__)
 
 import cv2
 import ssf
+
+class SSF_Viewer(object):
+    def __init__(self, display=None):
+        self.window = None
+        self.isopen = False
+        self.display = display
+    def imshow(self, arr):
+        if self.window is None:
+            height, width = arr.shape
+            self.window = pyglet.window.Window(width=width, height=height, display=self.display, vsync=False)
+            self.width = width
+            self.height = height
+            self.isopen = True
+        image = pyglet.image.ImageData(self.width, self.height, 'I', arr.tobytes(), pitch=self.width * -1)
+        self.window.clear()
+        self.window.switch_to()
+        self.window.dispatch_events()
+        image.blit(0,0)
+        self.window.flip()
+    def close(self):
+        if self.isopen:
+            self.window.close()
+            self.isopen = False
+    def __del__(self):
+        self.close()
 
 class SSF_Env(gym.Env):
 
@@ -102,8 +129,8 @@ class SSF_Env(gym.Env):
         self.raw_pixels = ssf.get_pixel_buffer_data(self.pb)
         ssf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
         self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
-        self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
         if self.videofile and not self.video:
+            self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
             vf = "%s.avi" % self.videofile
             self.video = cv2.VideoWriter(vf, cv2.VideoWriter_fourcc(*"H264"), self.metadata['video.frames_per_second'], (self.w,self.h))
             if self.videofile2!=None and platform.system() != "Windows":
@@ -120,11 +147,10 @@ class SSF_Env(gym.Env):
                 self.viewer = None
             return
 
-        from gym.envs.classic_control import rendering
         if self.viewer is None:
-            self.viewer = rendering.SimpleImageViewer()
+            self.viewer = SSF_Viewer()
 
-        self.viewer.imshow(self.game_gray_rgb)
+        self.viewer.imshow(self.game_state)
 
         if mode == 'rgb_array':
             return self.game_gray_rgb
@@ -181,9 +207,9 @@ class SSF_Env(gym.Env):
         reward = self.g.contents.reward
         ssf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
         self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
-        self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
         done = ssf.isGameOver(self.g)
         if self.videofile:
+            self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
             self.video.write(self.game_gray_rgb)
             if done:
                 self.video.release()
