@@ -11,16 +11,18 @@ import timeit
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--weights', type=float, default=1)
+    parser.add_argument('--scale', type=float, default=1)
+    parser.add_argument('--visualize', action='store_true')
     args = parser.parse_args()
 
-    env = ssf.gym.SSF_Env(gametype="explode", scale=.25, ls=2)
+    env = ssf.gym.SSF_Env(gametype="explode", scale=args.scale, ls=2)
     state = env.reset()
     done = False
     start = timeit.default_timer()
     while not done:
         action = env.action_space.sample()
         state, r, done, _ = env.step(action)
-        env.render()
+        if args.visualize:
+            env.render()
     stop = timeit.default_timer()
-    print stop - start 
+    print stop - start
