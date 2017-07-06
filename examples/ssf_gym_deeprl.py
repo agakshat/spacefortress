@@ -92,6 +92,7 @@ parser.add_argument('--weights', type=str, default=None)
 parser.add_argument('--policy', choices=["eps","tau"], default="eps")
 parser.add_argument('--algo', choices=["dqn","sarsa","naf"], default="dqn")
 parser.add_argument('--actionset', choices=[0,1,2], default=2, type=int)
+parser.add_argument('--visualize', action='store_true')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
@@ -166,18 +167,18 @@ callbacks = []
 if args.mode == 'train':
     while True:
         env.videofile = None
-        agent.fit(env, callbacks=callbacks, nb_max_start_steps=30, nb_steps=EPISODE_LENGTH*10, log_interval=10000, verbose=2, action_repetition=2, nb_max_episode_steps=EPISODE_LENGTH)
+        agent.fit(env, callbacks=callbacks, nb_max_start_steps=30, nb_steps=EPISODE_LENGTH*10, log_interval=10000, verbose=2, action_repetition=2, nb_max_episode_steps=EPISODE_LENGTH, visualize=args.visualize)
         agent.nb_steps_warmup = 0
         # After training is done, we save the final weights one more time.
         agent.save_weights(weights_filename, overwrite=True)
         # Finally, evaluate our algorithm for 10 episodes.
         env.videofile = 'ssf_%s_%s_epoch-%d' % (args.algo, args.policy, agent.epoch)
         env.videofile2 = 'ssf_%s_%s_latest.avi' % (args.algo, args.policy)
-        agent.test(env, nb_episodes=1, visualize=False)
+        agent.test(env, nb_episodes=1, visualize=args.visualize)
 elif args.mode == 'test':
     if args.weights:
         weights_filename = args.weights
         agent.load_weights(weights_filename)
     env.videofile = 'ssf_%s_%s_test' % (args.algo, args.policy)
     env.videofile2 = None
-    agent.test(env, nb_episodes=1, visualize=True)
+    agent.test(env, nb_episodes=1, visualize=args.visualize)

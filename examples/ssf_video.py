@@ -18,6 +18,7 @@ def parse_args():
     parser.add_argument('--scale', default=1, help="Scale of output image", type=float)
     parser.add_argument('--linesize', default=2, help="Scale of output image", type=float)
     parser.add_argument('--grayscale', action='store_true')
+    parser.add_argument('--novideo', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -44,8 +45,8 @@ if __name__ == "__main__":
     pb = ssf.newPixelBuffer(g, w, h)
     raw_pixels = ssf.get_pixel_buffer_data(pb)
     ssf.drawGameStateScaled(g, pb, scale, args.linesize)
-    cv2.imwrite("output.png", cv2.cvtColor(np.fromstring(raw_pixels, np.uint8).reshape(h, w, 4), cv2.COLOR_RGBA2RGB))
-    out = cv2.VideoWriter(args.output ,cv2.VideoWriter_fourcc(*"H264"), 30, (w,h))
+    if not args.novideo:
+        out = cv2.VideoWriter(args.output ,cv2.VideoWriter_fourcc(*"H264"), 30, (w,h))
 
     ssf.openLog(g, args.log)
 
@@ -54,11 +55,15 @@ if __name__ == "__main__":
     while not ssf.isGameOver(g):
         last_key = play_like_an_idiot(g, last_key)
         ssf.stepOneTick(g, 33)
-        ssf.logGameState(g)
         ssf.drawGameStateScaled(g, pb, scale, args.linesize)
-        src = cv2.cvtColor(cv2.cvtColor(np.fromstring(raw_pixels, np.uint8).reshape(h, w, 4), cv2.COLOR_RGBA2GRAY), cv2.COLOR_GRAY2RGB)
-        out.write(src)
+        if args.grayscale:
+            src = cv2.cvtColor(cv2.cvtColor(np.fromstring(raw_pixels, np.uint8).reshape(h, w, 4), cv2.COLOR_RGBA2GRAY), cv2.COLOR_GRAY2RGB)
+        else:
+            src = cv2.cvtColor(np.fromstring(raw_pixels, np.uint8).reshape(h, w, 4), cv2.COLOR_RGBA2RGB)
+        if not args.novideo:
+            out.write(src)
 
-    out.release()
+    if not args.novideo:
+        out.release()
     cv2.destroyAllWindows()
     ssf.closeLog(g)

@@ -102,6 +102,7 @@ class SSF_Env(gym.Env):
         self.raw_pixels = ssf.get_pixel_buffer_data(self.pb)
         ssf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
         self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
+        self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
         if self.videofile and not self.video:
             vf = "%s.avi" % self.videofile
             self.video = cv2.VideoWriter(vf, cv2.VideoWriter_fourcc(*"H264"), self.metadata['video.frames_per_second'], (self.w,self.h))
@@ -109,7 +110,6 @@ class SSF_Env(gym.Env):
                 if os.path.exists(self.videofile2):
                     os.unlink(self.videofile2)
                 os.symlink(vf, self.videofile2)
-            self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
             self.video.write(self.game_gray_rgb)
         return self.game_state
 
@@ -181,9 +181,9 @@ class SSF_Env(gym.Env):
         reward = self.g.contents.reward
         ssf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
         self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
+        self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
         done = ssf.isGameOver(self.g)
         if self.videofile:
-            self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
             self.video.write(self.game_gray_rgb)
             if done:
                 self.video.release()
