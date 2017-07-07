@@ -8,7 +8,11 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)),"../"))
 import ssf
 
+import cv2
+
 class SSF_Game(object):
+
+    FPS = 30
 
     def __init__(self, args):
         if args.gametype == "explode":
@@ -17,8 +21,24 @@ class SSF_Game(object):
             self.g = ssf.makeAutoTurnGame(grayscale=False)
         self.w = self.g.contents.config.width
         self.h = self.g.contents.config.height
-        self.game_window = pyglet.window.Window(self.w, self.h)
+
+        platform = pyglet.window.get_platform()
+        display = platform.get_default_display()
+        screen = display.get_default_screen()
+        self.screen_width = screen.width
+        self.screen_height = screen.height
+
+        # Should start with visible=False and move window while hidden but this is not working
+        self.game_window = pyglet.window.Window(self.w, self.h, resizable=False, visible=True)
+        self.game_window.set_location(int(self.screen_width/2-self.w/2), int(self.screen_height/2-self.h/2))
+        self.game_window.set_visible(True)
+
         self.game_window.push_handlers(self)
+
+        if args.video != None:
+            self.video = cv2.VideoWriter(args.video, cv2.VideoWriter_fourcc(*"H264"), self.FPS, (self.w,self.h))
+        else:
+            self.video = None
 
         self.fire = False
         self.thrust = False
@@ -28,7 +48,7 @@ class SSF_Game(object):
         self.raw_pixels = ssf.get_pixel_buffer_data(self.pb)
         self.draw()
 
-        pyglet.clock.schedule_interval(self.update, 1/30)
+        pyglet.clock.schedule_interval(self.update, 1/self.FPS)
 
     def draw(self):
         ssf.drawGameStateScaled(self.g, self.pb, 1, 2)
@@ -39,6 +59,8 @@ class SSF_Game(object):
         self.game_window.dispatch_events()
         image.blit(0,0)
         self.game_window.flip()
+        if args.video != None:
+            self.video.write(cv2.cvtColor(self.game_state, cv2.COLOR_RGBA2RGB))
 
     def on_key_press(self, symbol, modifiers):
         if symbol == key.SPACE:
@@ -60,19 +82,22 @@ class SSF_Game(object):
         elif symbol == key.D:
             ssf.releaseKey(self.g, ssf.RIGHT_KEY)
 
+    def cleanup(self):
+        if self.video != None:
+            self.video.release()
+        cv2.destroyAllWindows()
+
     def update(self, dt):
-        # if not self.fire and key.SPACE in self.keys and self.keys[key.SPACE]:
-        #     ssf.pressKey(self.g, ssf.FIRE_KEY)
-        #     self.fire = True
-        # else:
-        #     ssf.releaseKey(self.g, ssf.FIRE_KEY)
-        #     self.fire = False
         ssf.stepOneTick(self.g, int(np.round(dt*1000)))
         self.draw()
+        if ssf.isGameOver(self.g):
+            self.cleanup()
+            pyglet.app.exit()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--gametype', choices=["explode","autoturn"], default="explode")
+    parser.add_argument('--video', type=str, default=None)
     args = parser.parse_args()
 
     game = SSF_Game(args)
