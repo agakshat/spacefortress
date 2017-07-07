@@ -10,7 +10,7 @@ from keras.layers import Dense, Activation, Flatten, Conv2D, Permute
 from keras.optimizers import Adadelta
 import keras.backend as K
 
-from rl.agents.dqn import DQNAgent, NAFAgent
+from rl.agents.dqn import DQNAgent
 from rl.agents import SARSAAgent
 from rl.policy import Policy, LinearAnnealedPolicy, BoltzmannQPolicy, EpsGreedyQPolicy
 from rl.memory import SequentialMemory
@@ -27,7 +27,7 @@ import cv2
 import numpy as np
 
 INPUT_SHAPE = (84, 84)
-WINDOW_LENGTH = 8
+WINDOW_LENGTH = 4
 
 FRAMESKIP = 2
 EPISODES_IN_GAME = 5294
@@ -87,16 +87,17 @@ class SSFProcessor(Processor):
         return processed_batch
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('--gametype', choices=["explode","autoturn"], default="explode")
 parser.add_argument('--mode', choices=["train","test"], default="train")
 parser.add_argument('--weights', type=str, default=None)
 parser.add_argument('--policy', choices=["eps","tau"], default="eps")
-parser.add_argument('--algo', choices=["dqn","sarsa","naf"], default="dqn")
-parser.add_argument('--actionset', choices=[0,1,2], default=2, type=int)
+parser.add_argument('--algo', choices=["dqn","sarsa"], default="dqn")
+parser.add_argument('--actionset', choices=[0,1,2], default=0, type=int)
 parser.add_argument('--visualize', action='store_true')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
-env = ssf.gym.SSF_Env(gametype="explode", scale=.2, ls=3, action_set=args.actionset)
+env = ssf.gym.SSF_Env(gametype=args.gametype, scale=.2, ls=3, action_set=args.actionset)
 np.random.seed(123)
 env.seed(123)
 nb_actions = env.action_space.n
@@ -140,13 +141,13 @@ processor = SSFProcessor()
 # (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
 # so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
 if args.policy == "eps":
-    policy = EpochLinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1, value_min=.1, value_test=.01, nb_epochs=100)
+    policy = EpochLinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.1, value_min=.01, value_test=.01, nb_epochs=100)
 
 # The trade-off between exploration and exploitation is difficult and an on-going research topic.
 # If you want, you can experiment with the parameters or use a different policy. Another popular one
 # is Boltzmann-style exploration:
 elif args.policy == "tau":
-    policy = EpochLinearAnnealedPolicy(BoltzmannQPolicy(), attr='tau', value_max=10, value_min=1, value_test=.1, nb_epochs=100)
+    policy = EpochLinearAnnealedPolicy(BoltzmannQPolicy(), attr='tau', value_max=1, value_min=.1, value_test=.1, nb_epochs=100)
 # Feel free to give it a try!
 
 if args.algo == "dqn":

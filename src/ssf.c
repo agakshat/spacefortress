@@ -419,8 +419,8 @@ void updateMissiles(Game *game) {
         if (game->fortress.o.alive) {
           if (game->fortress.vulnerabilityTimer >= game->config.fortress.vulnerabilityTime) {
             game->score.vulnerability += 1;
-            if (game->score.vulnerability < 11)
-              reward(game, triangularNumber(game->score.vulnerability));
+            // if (game->score.vulnerability < 11)
+            //   reward(game, triangularNumber(game->score.vulnerability));
             addEvent(game, VLNER_INCREASED_EVENT);
           } else {
             if (game->score.vulnerability >= game->config.fortress.vulnerabilityThreshold + 1) {
@@ -430,7 +430,7 @@ void updateMissiles(Game *game) {
               playSound(EXPLOSION_SOUND);
               addEvent(game, FORTRESS_DESTROYED_EVENT);
             } else {
-              penalize(game, triangularNumber(game->score.vulnerability));
+              // penalize(game, game->score.vulnerability);
               playSound(VLNER_RESET_SOUND);
               addEvent(game, VLNER_RESET_EVENT);
             }
@@ -439,7 +439,7 @@ void updateMissiles(Game *game) {
           game->fortress.vulnerabilityTimer = 0;
         }
       } else if (isOutsideGameArea(game, &game->missiles[i].o.position)) {
-        penalize(game, game->config.missilePenalty);
+        // penalize(game, game->config.missilePenalty);
         game->missiles[i].o.alive = false;
       }
     }
@@ -514,10 +514,10 @@ void baseConfig(Config *config) {
   config->height = 420;
   config->gameTime = 180000;
   /* Points */
-  config->destroyFortress = 500;
-  config->shipDeathPenalty = 50;
-  config->missilePenalty = 5;
-  config->hitReward = 1;
+  config->destroyFortress = 100;
+  config->shipDeathPenalty = 100;
+  config->missilePenalty = 2;
+  // config->hitReward = 1;
   /* Projectiles */
   config->shell.collisionRadius = 3;
   config->shell.speed = 6;

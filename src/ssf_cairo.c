@@ -145,11 +145,21 @@ void centeredText(cairo_t *ctx, char *text, int x, int y) {
   cairo_show_text(ctx, text);
 }
 
-void drawScore( cairo_t *ctx, int pnts, int vlner, float ls, bool left, bool right, bool thrust, bool fire, bool grayscale) {
-  // printf("keys: %d %d %d %d\n", left, right, thrust, fire);
-  // int label_width = 89;
-  // int label_height = 32;
-  /* int pad = 16; */
+void drawScore( cairo_t *ctx, int pnts, float ls, bool grayscale) {
+  int score_y = 210;
+  double start = 210;
+
+  cairo_select_font_face(ctx, "monospace", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+
+  cairo_set_font_size( ctx, 30 );
+  cairo_set_source_rgb(ctx, .5, .5, .5);
+
+  char text[256];
+  sprintf(text, "%04d", pnts);
+  centeredText(ctx, text, start, score_y-193);
+}
+
+void drawKeyState( cairo_t *ctx, float ls, bool left, bool right, bool thrust, bool fire, bool grayscale) {
   int score_y = 210;
   double start = 210;
 
@@ -179,39 +189,21 @@ void drawScore( cairo_t *ctx, int pnts, int vlner, float ls, bool left, bool rig
     cairo_set_source_rgb(ctx, .25, .25, .25);
   cairo_rectangle(ctx, start+62.5, score_y-195, 25, 10);
   cairo_fill(ctx);
+}
+
+void drawVlner( cairo_t *ctx, int vlner, float ls, bool grayscale) {
+  int score_y = 210;
+  double start = 210;
+
+  cairo_set_line_width( ctx, ls-1 );
 
   cairo_set_source_rgb(ctx, .25, .25, .25);
-  cairo_rectangle(ctx, start-100, score_y+185, 200, 10);
+  cairo_rectangle(ctx, start-100, score_y+187, 200, 10);
   cairo_fill(ctx);
 
   cairo_set_source_rgb(ctx, .75, .75, .75);
-  cairo_rectangle(ctx, start-100, score_y+185, 20*(vlner>10 ? 10 : vlner), 10);
+  cairo_rectangle(ctx, start-100, score_y+187, 20*(vlner>10 ? 10 : vlner), 10);
   cairo_fill(ctx);
-  //
-  // cairo_move_to(ctx, start+89.5, score_y);
-  // cairo_line_to(ctx, start+89.5, score_y+label_height*2);
-  // cairo_move_to(ctx, start+0.5, score_y+label_height+0.5);
-  // cairo_line_to(ctx, start+0.5+label_width*2, score_y+label_height+0.5);
-  // cairo_set_source_rgb(ctx, 0, 1, 0);
-  // cairo_stroke(ctx);
-
-
-  // cairo_select_font_face(ctx, "sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-  // /* cairo_set_font_face( ctx, loadFont( "freesansbold.ttf" )); */
-  //
-  // // cairo_set_font_size( ctx, 20 );
-  // // centeredText(ctx, "PNTS", start + 89/2, score_y+label_height/2); /* 18 */
-  // // centeredText(ctx, "VLNER", start + 89 + 89/2, score_y+label_height/2); /* 18 */
-  //
-  // int fs = 26;
-  // cairo_set_font_size( ctx, fs );
-  // cairo_set_source_rgb(ctx, .75, .75, .75);
-  //
-  // char text[256];
-  // sprintf(text, "%d", pnts);
-  // centeredText(ctx, text, start, score_y-200+fs/3); /* 18 */
-  // sprintf(text, "%d", vlner);
-  // centeredText(ctx, text, start, score_y+200-fs/2); /* 18 */
 }
 
 void drawJustGameStuff( cairo_t *ctx, Game *g, float ls ) {
@@ -251,6 +243,8 @@ void drawGameStateScaled( Game *g, cairo_surface_t *surface, float scale, float 
   cairo_paint( ctx );
 
   drawJustGameStuff( ctx, g, ls );
-  drawScore( ctx, g->score.points, g->score.vulnerability, ls, g->keys.left, g->keys.right, g->keys.thrust, g->keys.fire, g->grayscale);
+  // drawKeyState( ctx, ls, g->keys.left, g->keys.right, g->keys.thrust, g->keys.fire, g->grayscale);
+  drawScore( ctx, g->score.points, ls, g->grayscale);
+  drawVlner( ctx, g->score.vulnerability, ls, g->grayscale);
   cairo_destroy( ctx );
 }

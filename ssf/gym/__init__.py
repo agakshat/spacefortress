@@ -45,7 +45,7 @@ class SSF_Env(gym.Env):
         'video.frames_per_second' : 30
     }
 
-    def __init__(self, gametype="explode", scale=.2, ls=3, action_set=2, continuous=False):
+    def __init__(self, gametype="explode", scale=.2, ls=3, action_set=0, continuous=False):
         self._seed()
         self.continuous = continuous
         self.viewer = None
@@ -56,44 +56,44 @@ class SSF_Env(gym.Env):
         self.tickdur = int(np.ceil(1./self.metadata['video.frames_per_second']*1000))
         # 0=FIRE, 1=THRUST, 2=LEFT, 3=RIGHT
         if self.gametype == "explode":
-            if action_set == 1:
-                self.action_combinations = np.array([
-                    [0, 0, 0, 0], # NOOP
-                    [1, 0, 0, 0], # FIRE
-                    [0, 1, 0, 0], # THRUST
-                    [0, 0, 1, 0], # LEFT
-                    [0, 0, 0, 1], # RIGHT
-                    [1, 1, 0, 0], # FIRE & THRUST
-                    [1, 0, 1, 0], # FIRE & LEFT
-                    [1, 0, 0, 1], # FIRE & RIGHT
-                ])
-            if action_set == 2:
-                self.action_combinations = np.array([
-                    [0, 0, 0, 0], # NOOP
-                    [1, 0, 0, 0], # FIRE
-                    [0, 1, 0, 0], # THRUST
-                    [0, 0, 1, 0], # LEFT
-                    [0, 0, 0, 1], # RIGHT
-                ])
-            else:
-                self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
+            # if action_set == 1:
+            #     self.action_combinations = np.array([
+            #         [0, 0, 0, 0], # NOOP
+            #         [1, 0, 0, 0], # FIRE
+            #         [0, 1, 0, 0], # THRUST
+            #         [0, 0, 1, 0], # LEFT
+            #         [0, 0, 0, 1], # RIGHT
+            #         [1, 1, 0, 0], # FIRE & THRUST
+            #         [1, 0, 1, 0], # FIRE & LEFT
+            #         [1, 0, 0, 1], # FIRE & RIGHT
+            #     ])
+            # if action_set == 2:
+            #     self.action_combinations = np.array([
+            #         [0, 0, 0, 0], # NOOP
+            #         [1, 0, 0, 0], # FIRE
+            #         [0, 1, 0, 0], # THRUST
+            #         [0, 0, 1, 0], # LEFT
+            #         [0, 0, 0, 1], # RIGHT
+            #     ])
+            # else:
+            self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
             self.g = ssf.makeExplodeGame(grayscale=True)
         elif self.gametype == "autoturn":
-            if action_set == 1:
-                self.action_combinations = np.array([
-                    [0, 0], # NOOP
-                    [1, 0], # FIRE
-                    [0, 1], # THRUST
-                    [1, 1], # FIRE & THRUST
-                ])
-            if action_set == 2:
-                self.action_combinations = np.array([
-                    [0, 0], # NOOP
-                    [1, 0], # FIRE
-                    [0, 1], # THRUST
-                ])
-            else:
-                self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1])).T.reshape(-1,2)
+            # if action_set == 1:
+            #     self.action_combinations = np.array([
+            #         [0, 0], # NOOP
+            #         [1, 0], # FIRE
+            #         [0, 1], # THRUST
+            #         [1, 1], # FIRE & THRUST
+            #     ])
+            # if action_set == 2:
+            #     self.action_combinations = np.array([
+            #         [0, 0], # NOOP
+            #         [1, 0], # FIRE
+            #         [0, 1], # THRUST
+            #     ])
+            # else:
+            self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
             self.g = ssf.makeAutoTurnGame(grayscale=True)
         if self.continuous:
             if self.gametype == "explode":
