@@ -294,6 +294,7 @@ void fireMissile(Game *game) {
         game->missiles[i].o.velocity.x = game->config.missile.speed * cos(rad(game->ship.o.angle));
         game->missiles[i].o.velocity.y = -game->config.missile.speed * sin(rad(game->ship.o.angle));
 
+        penalize(game, game->config.missilePenalty);
         playSound(FIRE_MISSILE_SOUND);
         addEvent(game, MISSILE_FIRED_EVENT);
         return;
