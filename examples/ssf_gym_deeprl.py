@@ -161,8 +161,8 @@ agent.compile(Adadelta(lr=1), metrics=['mae'])
 
 # Okay, now it's time to learn something! We capture the interrupt exception so that training
 # can be prematurely aborted. Notice that you can the built-in Keras callbacks!
-weights_filename = 'ssf_%s_%s_weights.h5f' % (args.algo, args.policy)
-log_filename = 'ssf_%s_%s_log.json' % (args.algo, args.policy)
+weights_filename = 'ssf_%s_%s_%s_weights.h5f' % (args.gametype, args.algo, args.policy)
+log_filename = 'ssf_%s_%s_%s_log.json' % (args.gametype, args.algo, args.policy)
 callbacks = []
 
 if args.mode == 'train':
@@ -173,13 +173,13 @@ if args.mode == 'train':
         # After training is done, we save the final weights one more time.
         agent.save_weights(weights_filename, overwrite=True)
         # Finally, evaluate our algorithm for 10 episodes.
-        env.videofile = 'ssf_%s_%s_epoch-%d' % (args.algo, args.policy, agent.epoch)
-        env.videofile2 = 'ssf_%s_%s_latest.avi' % (args.algo, args.policy)
+        env.videofile = 'ssf_%s_%s_%s_epoch-%d' % (args.gametype, args.algo, args.policy, agent.epoch)
+        env.videofile2 = 'ssf_%s_%s_%s_latest.avi' % (args.gametype, args.algo, args.policy)
         agent.test(env, nb_episodes=1, visualize=args.visualize)
 elif args.mode == 'test':
     if args.weights:
         weights_filename = args.weights
         agent.load_weights(weights_filename)
-    env.videofile = 'ssf_%s_%s_test' % (args.algo, args.policy)
+    env.videofile = 'ssf_%s_%s_%s_test' % (args.gametype, args.algo, args.policy)
     env.videofile2 = None
     agent.test(env, nb_episodes=1, visualize=args.visualize)
