@@ -557,6 +557,8 @@ void explodeConfig(Config *config) {
 }
 
 void initGame(Game *game) {
+  int i;
+
   game->keys.thrust = false;
   game->keys.left = false;
   game->keys.right = false;
@@ -574,8 +576,8 @@ void initGame(Game *game) {
   game->fortress.o.angle = 180;
   game->fortress.lastAngle = 0;
 
-  for (int i=0; i<MAX_MISSILES; i++) { game->missiles[i].o.alive = false; }
-  for (int i=0; i<MAX_SHELLS; i++) { game->shells[i].o.alive = false; }
+  for (i=0; i<MAX_MISSILES; i++) { game->missiles[i].o.alive = false; }
+  for (i=0; i<MAX_SHELLS; i++) { game->shells[i].o.alive = false; }
 
   initHexagon(&game->bigHex, game->config.bigHex);
   initHexagon(&game->smallHex, game->config.smallHex);
@@ -649,11 +651,11 @@ double vdir(const Object *ship, const Object *fortress) {
 void dumpSexpGameState(Game *game, char *buf, size_t size) {
   char missiles[BUFSIZE];
   char shells[BUFSIZE];
-  int n;
+  int n, i;
 
   n = 0;
   missiles[0] = 0;
-  for (int i=0; i<MAX_MISSILES; i++) {
+  for (i=0; i<MAX_MISSILES; i++) {
     if (game->missiles[i].o.alive) {
       n += dumpProjectile(&game->missiles[i].o, missiles, BUFSIZE-n);
       if (n >= BUFSIZE-1) break;
@@ -661,7 +663,7 @@ void dumpSexpGameState(Game *game, char *buf, size_t size) {
   }
   n = 0;
   shells[0] = 0;
-  for (int i=0; i<MAX_SHELLS; i++) {
+  for (i=0; i<MAX_SHELLS; i++) {
     if (game->shells[i].o.alive) {
       n += dumpProjectile(&game->shells[i].o, missiles, BUFSIZE-n);
       if (n >= BUFSIZE-1) break;
@@ -797,6 +799,7 @@ void closeLog(Game *game) {
 }
 
 bool logGameState(Game *game) {
+  int i;
   if (game->logStream) {
     fprintf(game->logStream, "[%d,%d,%.3f,%.3f,%.3f,%.3f,%.1f,%d,%.1f,",
             game->time,
@@ -810,7 +813,7 @@ bool logGameState(Game *game) {
             game->fortress.o.angle);
 
     fprintf(game->logStream, "[");
-    for (int i=0; i<MAX_MISSILES; i++) {
+    for (i=0; i<MAX_MISSILES; i++) {
       if (game->missiles[i].o.alive) {
         fprintf(game->logStream, "%s[%.3f,%.3f,%.1f]",
                 i==0?"":",",
@@ -820,7 +823,7 @@ bool logGameState(Game *game) {
       }
     }
     fprintf(game->logStream, "],[");
-    for (int i=0; i<MAX_SHELLS; i++) {
+    for (i=0; i<MAX_SHELLS; i++) {
       if (game->shells[i].o.alive) {
         fprintf(game->logStream, "%s[%.3f,%.3f,%.1f]",
                 i==0?"":",",
@@ -838,14 +841,14 @@ bool logGameState(Game *game) {
             game->ship.turnFlag == TURN_RIGHT ? 1:0);
     /* Game Events */
     fprintf(game->logStream, "[");
-    for( int i=0; i<game->events.count; i++ ) {
+    for(i=0; i<game->events.count; i++ ) {
       fprintf(game->logStream, "%s%d",
               i==0?"":",",
               game->events.events[i]);
     }
     fprintf(game->logStream, "],[");
     /* Input Events */
-    for( int i=0; i<game->keys.eventCount; i++ ) {
+    for(i=0; i<game->keys.eventCount; i++ ) {
       fprintf(game->logStream, "%s[%d,%d]",
               i==0?"":",",
               game->keys.events[i].state?1:0,

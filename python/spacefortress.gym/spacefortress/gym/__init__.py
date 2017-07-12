@@ -4,14 +4,14 @@ from .ssf_env import SSF_Env
 
 register(
    	id='SpaceFortress-explode-v0',
-   	entry_point='gym.envs.spacefortress:SSF_Env',
+   	entry_point='spacefortress.gym:SSF_Env',
     kwargs={ 'gametype': 'explode' },
     nondeterministic=False,
 )
 
 register(
    	id='SpaceFortress-autoturn-v0',
-   	entry_point='gym.envs.spacefortress:SSF_Env',
+   	entry_point='spacefortress.gym:SSF_Env',
     kwargs={ 'gametype': 'autoturn' },
     nondeterministic=False,
 )

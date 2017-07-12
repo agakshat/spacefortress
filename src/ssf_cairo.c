@@ -79,6 +79,7 @@ void freePixelBuffer( PixelBuffer* pb ) {
 }
 
 void drawWireFrame( cairo_t *ctx, const WireFrame* wf, const Point* p, int angle, float grayscale ) {
+  int i;
   cairo_save( ctx );
   cairo_translate( ctx, p->x, p->y );
   cairo_rotate( ctx, -deg2rad( angle ));
@@ -88,7 +89,7 @@ void drawWireFrame( cairo_t *ctx, const WireFrame* wf, const Point* p, int angle
   else
     cairo_set_source_rgb( ctx, grayscale, grayscale, grayscale );
 
-  for (int i=0; i<wf->lineCount; i++) {
+  for (i=0; i<wf->lineCount; i++) {
     cairo_move_to( ctx, wf->points[wf->lines[i].from].x, wf->points[wf->lines[i].from].y );
     cairo_line_to( ctx, wf->points[wf->lines[i].to].x, wf->points[wf->lines[i].to].y );
   }
@@ -98,12 +99,13 @@ void drawWireFrame( cairo_t *ctx, const WireFrame* wf, const Point* p, int angle
 }
 
 void drawHexagon( cairo_t *ctx, Hexagon *h, float grayscale ) {
+  int i;
   if (grayscale<0 || grayscale>1)
     cairo_set_source_rgb( ctx, 0, 1, 0 );
   else
     cairo_set_source_rgb( ctx, grayscale, grayscale, grayscale );
   cairo_move_to( ctx, h->points[0].x, h->points[0].y );
-  for (int i=1; i<6; i++) {
+  for (i=1; i<6; i++) {
     cairo_line_to( ctx, h->points[i].x, h->points[i].y );
   }
   cairo_close_path( ctx );
@@ -111,17 +113,18 @@ void drawHexagon( cairo_t *ctx, Hexagon *h, float grayscale ) {
 }
 
 void drawExplosion( cairo_t *ctx, const Point* p, float ls, bool grayscale ) {
+  int radius, angle, ofs;
   /* cairo_set_line_width( ctx, 1.4 ); */
   cairo_set_line_width( ctx, ls );
-  int ofs = 0;
-  for( int radius=15; radius<70; radius += 8 ) {
+  ofs = 0;
+  for (radius=15; radius<70; radius += 8 ) {
     ofs += 3;
     if( radius < 60 ) {
       cairo_set_source_rgb( ctx, 1,1,0 );
     } else {
       cairo_set_source_rgb( ctx, 1,0,0 );
     }
-    for( int angle=0; angle<360; angle += 30 ) {
+    for (angle=0; angle<360; angle += 30 ) {
       cairo_arc( ctx, p->x, p->y, radius, deg2rad(angle+ofs),deg2rad(angle+ofs+10));
       cairo_stroke( ctx );
     }
@@ -207,6 +210,8 @@ void drawVlner( cairo_t *ctx, int vlner, float ls, bool grayscale) {
 }
 
 void drawJustGameStuff( cairo_t *ctx, Game *g, float ls ) {
+  int i;
+
   drawHexagon( ctx, &g->bigHex, g->grayscale ? 1 : -1 );
   drawHexagon( ctx, &g->smallHex, g->grayscale ? 1 : -1 );
 
@@ -220,12 +225,12 @@ void drawJustGameStuff( cairo_t *ctx, Game *g, float ls ) {
   } else {
     drawExplosion( ctx, &g->fortress.o.position, ls, g->grayscale ? 1 : -1 );
   }
-  for (int i=0; i<MAX_MISSILES; i++) {
+  for (i=0; i<MAX_MISSILES; i++) {
     if (g->missiles[i].o.alive) {
       drawWireFrame(ctx, &missileWireFrame, &g->missiles[i].o.position, g->missiles[i].o.angle, g->grayscale ? 1 : -1 );
     }
   }
-  for (int i=0; i<MAX_SHELLS; i++) {
+  for (i=0; i<MAX_SHELLS; i++) {
     double d = sqrt(pow(g->shells[i].o.position.x - g->fortress.o.position.x, 2) + pow(g->shells[i].o.position.y - g->fortress.o.position.y, 2));
     if (g->shells[i].o.alive && d > 21) {
       drawWireFrame(ctx, &shellWireFrame, &g->shells[i].o.position, g->shells[i].o.angle, g->grayscale ? 1 : -1 );

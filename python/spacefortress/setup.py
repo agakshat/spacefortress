@@ -1,10 +1,10 @@
 from setuptools import setup, Extension
 from pkgconfig import pkgconfig
-import subprocess
+from subprocess import PIPE,Popen
 import os
 
-GGITSHA1 = subprocess.check_output(["git", "rev-parse", "-q", "HEAD"]).strip()
-GVERSION = '1.%d' % len(subprocess.check_output(["git", "log", "--pretty=oneline"]).strip().split("\n"))
+GGITSHA1 = Popen(["git", "rev-parse", "-q", "HEAD"], stdout=PIPE).communicate()[0].decode('utf8').strip()
+GVERSION = '1.%d' % len(Popen(["git", "log", "--pretty=oneline"], stdout=PIPE).communicate()[0].decode('utf8').split("\n"))
 
 deps = pkgconfig("cairo")
 deps.update({

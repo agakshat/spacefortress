@@ -1,5 +1,4 @@
-import subprocess
-
+from subprocess import PIPE,Popen
 
 def pkgconfig(*packages, **kw):
     """
@@ -44,6 +43,6 @@ def pkgconfig(*packages, **kw):
                 }
     for package in packages:
         for distutils_key, (pkg_option, n) in flag_map.items():
-            items = subprocess.check_output(['pkg-config', optional_args, pkg_option, package]).decode('utf8').split()
+            items = Popen(['pkg-config', optional_args, pkg_option, package], stdout=PIPE).communicate()[0].decode('utf8').strip().split()
             config.setdefault(distutils_key, []).extend([i[n:] for i in items])
     return config

@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import cv2
-import ssf
+import spacefortress as sf
 
 class SSF_Viewer(object):
     def __init__(self, display=None):
@@ -77,7 +77,7 @@ class SSF_Env(gym.Env):
             #     ])
             # else:
             self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
-            self.g = ssf.makeExplodeGame(grayscale=True)
+            self.g = sf.makeExplodeGame(grayscale=True)
         elif self.gametype == "autoturn":
             # if action_set == 1:
             #     self.action_combinations = np.array([
@@ -94,7 +94,7 @@ class SSF_Env(gym.Env):
             #     ])
             # else:
             self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
-            self.g = ssf.makeAutoTurnGame(grayscale=True)
+            self.g = sf.makeAutoTurnGame(grayscale=True)
         if self.continuous:
             if self.gametype == "explode":
                 # Action is 3 floats [fire, thrust, turn].
@@ -119,15 +119,15 @@ class SSF_Env(gym.Env):
 
     def _reset(self):
         if self.gametype == "explode":
-            self.g = ssf.makeExplodeGame(grayscale=True)
+            self.g = sf.makeExplodeGame(grayscale=True)
         elif self.gametype == "autoturn":
-            self.g = ssf.makeAutoTurnGame(grayscale=True)
+            self.g = sf.makeAutoTurnGame(grayscale=True)
         self.w = int(np.ceil(self.g.contents.config.width * self.scale))
         self.h = int(np.ceil(self.g.contents.config.height * self.scale))
         self.observation_space = spaces.Box(low=0, high=255, shape=(self.h, self.w, 3))
-        self.pb = ssf.newPixelBuffer(self.g, self.w, self.h)
-        self.raw_pixels = ssf.get_pixel_buffer_data(self.pb)
-        ssf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
+        self.pb = sf.newPixelBuffer(self.g, self.w, self.h)
+        self.raw_pixels = sf.get_pixel_buffer_data(self.pb)
+        sf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
         self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
         if self.videofile and not self.video:
             self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
@@ -163,51 +163,51 @@ class SSF_Env(gym.Env):
         reward = 0
         if self.continuous:
             if action[0] > 0:
-                ssf.pressKey(self.g, ssf.FIRE_KEY)
+                sf.pressKey(self.g, sf.FIRE_KEY)
             else:
-                ssf.releaseKey(self.g, ssf.FIRE_KEY)
+                sf.releaseKey(self.g, sf.FIRE_KEY)
             if action[1] > 0:
-                ssf.pressKey(self.g, ssf.THRUST_KEY)
+                sf.pressKey(self.g, sf.THRUST_KEY)
             else:
-                ssf.releaseKey(self.g, ssf.THRUST_KEY)
+                sf.releaseKey(self.g, sf.THRUST_KEY)
             if self.gametype == "explode":
                 if action[2] < -0.5:
                     if self.last_action != None and self.last_action > 0.5:
-                        ssf.releaseKey(self.g, ssf.RIGHT_KEY)
-                    ssf.pressKey(self.g, ssf.LEFT_KEY)
+                        sf.releaseKey(self.g, sf.RIGHT_KEY)
+                    sf.pressKey(self.g, sf.LEFT_KEY)
                 elif action[2] > 0.5:
                     if self.last_action != None and self.last_action < -0.5:
-                        ssf.releaseKey(self.g, ssf.LEFT_KEY)
-                    ssf.pressKey(self.g, ssf.RIGHT_KEY)
+                        sf.releaseKey(self.g, sf.LEFT_KEY)
+                    sf.pressKey(self.g, sf.RIGHT_KEY)
                 else:
                     if self.last_action != None and self.last_action < -0.5:
-                        ssf.releaseKey(self.g, ssf.LEFT_KEY)
+                        sf.releaseKey(self.g, sf.LEFT_KEY)
                     elif self.last_action != None and self.last_action > 0.5:
-                        ssf.releaseKey(self.g, ssf.RIGHT_KEY)
+                        sf.releaseKey(self.g, sf.RIGHT_KEY)
         else:
             keystate = self.action_combinations[action]
             if keystate[0]:
-                ssf.pressKey(self.g, ssf.FIRE_KEY)
+                sf.pressKey(self.g, sf.FIRE_KEY)
             else:
-                ssf.releaseKey(self.g, ssf.FIRE_KEY)
+                sf.releaseKey(self.g, sf.FIRE_KEY)
             if keystate[1]:
-                ssf.pressKey(self.g, ssf.THRUST_KEY)
+                sf.pressKey(self.g, sf.THRUST_KEY)
             else:
-                ssf.releaseKey(self.g, ssf.THRUST_KEY)
+                sf.releaseKey(self.g, sf.THRUST_KEY)
             if self.gametype == "explode":
                 if keystate[2]:
-                    ssf.pressKey(self.g, ssf.LEFT_KEY)
+                    sf.pressKey(self.g, sf.LEFT_KEY)
                 else:
-                    ssf.releaseKey(self.g, ssf.LEFT_KEY)
+                    sf.releaseKey(self.g, sf.LEFT_KEY)
                 if keystate[3]:
-                    ssf.pressKey(self.g, ssf.RIGHT_KEY)
+                    sf.pressKey(self.g, sf.RIGHT_KEY)
                 else:
-                    ssf.releaseKey(self.g, ssf.RIGHT_KEY)
-        ssf.stepOneTick(self.g, self.tickdur)
+                    sf.releaseKey(self.g, sf.RIGHT_KEY)
+        sf.stepOneTick(self.g, self.tickdur)
         reward = self.g.contents.reward
-        ssf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
+        sf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
         self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
-        done = ssf.isGameOver(self.g)
+        done = sf.isGameOver(self.g)
         if self.videofile:
             self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
             self.video.write(self.game_gray_rgb)
