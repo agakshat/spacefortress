@@ -1,21 +1,24 @@
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)),"../"))
-
 import argparse
-
-import ssf
-import ssf.gym
-
 import timeit
+import tempfile
+import gym
+from gym import wrappers
+import numpy as np
+
+import spacefortress.gym
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--scale', type=float, default=1)
+    parser.add_argument('--gametype', choices=["explode","autoturn"], default="explode")
     parser.add_argument('--visualize', action='store_true')
     args = parser.parse_args()
 
-    env = ssf.gym.SSF_Env(gametype="explode", scale=args.scale, ls=2)
+    env_name = 'SpaceFortress-{}-v0'.format(args.gametype)
+    env = gym.make(env_name)
+    tmp_dir = tempfile.mkdtemp(prefix='{}-'.format(env_name))
+    print(tmp_dir)
+    env = wrappers.Monitor(env, tmp_dir)
     state = env.reset()
     done = False
     start = timeit.default_timer()

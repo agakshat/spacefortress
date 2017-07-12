@@ -394,6 +394,7 @@ void updateShip(Game *game) {
     }
     game->ship.o.position.x += game->ship.o.velocity.x;
     game->ship.o.position.y -= game->ship.o.velocity.y;
+    game->ship.vdir = vdir(&game->ship.o, &game->fortress.o);
 
     if (!insideHexagon(&game->bigHex, &game->ship.o.position)) {
       killShip(game);
@@ -510,7 +511,8 @@ bool isGameOver(Game *game) {
   return game->time >= game->config.gameTime;
 }
 
-void baseConfig(Config *config) {
+void baseConfig(Game *game, bool autoturn) {
+  Config *config = &game->config;
   config->width = 420;
   config->height = 420;
   config->gameTime = 180000;
@@ -543,17 +545,17 @@ void baseConfig(Config *config) {
   config->ship.startVelocity.x = cos(rad(60));
   config->ship.startVelocity.y = sin(rad(60));
   config->ship.startAngle = 0;
+  config->ship.vdir = vdir(&game->ship.o, &game->fortress.o);
   /* Game Modes */
-  config->autoTurn = false;
+  config->autoTurn = autoturn;
 }
 
-void autoTurnConfig(Config *config) {
-  baseConfig(config);
-  config->autoTurn = true;
+void autoTurnConfig(Game *game) {
+  baseConfig(game, true);
 }
 
-void explodeConfig(Config *config) {
-  baseConfig(config);
+void explodeConfig(Game *game) {
+  baseConfig(game, false);
 }
 
 void initGame(Game *game) {
@@ -600,7 +602,7 @@ Game* makeAutoTurnGame(bool grayscale) {
   Game *g = malloc(sizeof(Game));
   memset((void *)g, 0, sizeof(Game));
   if (g != NULL) {
-    autoTurnConfig(&g->config);
+    autoTurnConfig(g);
     initGame(g);
     g->grayscale = grayscale;
   }
@@ -610,7 +612,7 @@ Game* makeAutoTurnGame(bool grayscale) {
 Game* makeExplodeGame(bool grayscale) {
   Game *g = malloc(sizeof(Game));
   if (g != NULL) {
-    explodeConfig(&g->config);
+    explodeConfig(g);
     initGame(g);
     g->grayscale = grayscale;
   }

@@ -66,7 +66,8 @@ class Ship(Structure):
     _fields_ = [("o", Object),
                 ("deathTimer", Timer),
                 ("thrustFlag", c_bool),
-                ("turnFlag", Turn)]
+                ("turnFlag", Turn),
+                ("vdir", c_double)]
 
 class Fortress(Structure):
     _fields_ = [("o", Object),
@@ -126,7 +127,8 @@ class ShipConfig(Structure):
                 ("acceleration", c_double),
                 ("startPosition", Point),
                 ("startVelocity", Point),
-                ("startAngle", c_int)]
+                ("startAngle", c_int),
+                ("vdir", c_double),]
 
 class Config(Structure):
     _fields_ = [("width", c_int),
@@ -184,6 +186,12 @@ missileWireFrame = WireFrame.in_dll(dll, "missileWireFrame")
 shellWireFrame = WireFrame.in_dll(dll, "shellWireFrame")
 shipWireFrame = WireFrame.in_dll(dll, "shipWireFrame")
 fortressWireFrame = WireFrame.in_dll(dll, "fortressWireFrame")
+
+_initGame = dll.initGame
+_initGame.argtypes = [POINTER(Game)]
+
+def initGame(game):
+    _initGame(game)
 
 _makeExplodeGame = dll.makeExplodeGame
 _makeExplodeGame.argtypes = [c_bool]

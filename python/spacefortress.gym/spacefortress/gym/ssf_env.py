@@ -1,3 +1,5 @@
+from __future__ import division
+
 import pyglet
 
 import numpy as np
@@ -45,7 +47,9 @@ class SSF_Env(gym.Env):
         'video.frames_per_second' : 30
     }
 
-    def __init__(self, gametype="explode", scale=.2, ls=3, action_set=0, continuous=False):
+    def __init__(self, gametype="explode", scale=.2, ls=3, action_set=0, continuous=False, obs_type='image'):
+        assert obs_type in ('image', 'features')
+        self.obs_type = obs_type
         self._seed()
         self.continuous = continuous
         self.viewer = None
@@ -54,6 +58,7 @@ class SSF_Env(gym.Env):
         self.scale = scale
         self.ls = ls
         self.tickdur = int(np.ceil(1./self.metadata['video.frames_per_second']*1000))
+
         # 0=FIRE, 1=THRUST, 2=LEFT, 3=RIGHT
         if self.gametype == "explode":
             # if action_set == 1:
@@ -109,28 +114,54 @@ class SSF_Env(gym.Env):
                 self.action_space = spaces.Box(-1, +1, (2,))
         else:
             self.action_space = spaces.Discrete(len(self.action_combinations))
-        self.videofile = None
-        self.videofile2 = None
-        self.video = None
 
-    def _seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
-
-    def _reset(self):
         if self.gametype == "explode":
             self.g = sf.makeExplodeGame(grayscale=True)
         elif self.gametype == "autoturn":
             self.g = sf.makeAutoTurnGame(grayscale=True)
         self.w = int(np.ceil(self.g.contents.config.width * self.scale))
         self.h = int(np.ceil(self.g.contents.config.height * self.scale))
-        self.observation_space = spaces.Box(low=0, high=255, shape=(self.h, self.w, 3))
         self.pb = sf.newPixelBuffer(self.g, self.w, self.h)
         self.raw_pixels = sf.get_pixel_buffer_data(self.pb)
+
+        self.videofile = None
+        self.videofile2 = None
+        self.video = None
+
+        self.MAX_SCORE = int(((self.g.contents.config.gameTime/1000) / (.250 * 11 + 1)) * (100-2*12))
+
+        if self.obs_type == 'image':
+            self.observation_space = spaces.Box(low=0, high=255, shape=(self.h, self.w, 3))
+        elif self.obs_type == 'features':
+            self.observation_space = spaces.Box(low=-1, high=1, shape=self._get_features().shape)
+
+    def _get_features(self):
+        return np.clip(np.array([
+            1 if self.g.contents.ship.o.alive else 0,
+            self.g.contents.ship.o.position.x / self.g.contents.config.width,
+            self.g.contents.ship.o.position.y / self.g.contents.config.height,
+            self.g.contents.ship.o.velocity.x / 10,
+            self.g.contents.ship.o.velocity.y / 10,
+            self.g.contents.ship.o.angle / 360,
+            self.g.contents.ship.vdir % 360 / 360,
+            1 if self.g.contents.fortress.o.alive else 0,
+            self.g.contents.fortress.o.angle / 360,
+            len([m for m in self.g.contents.missiles if m.o.alive]) / sf.MAX_MISSILES,
+            len([m for m in self.g.contents.shells if m.o.alive]) / sf.MAX_SHELLS,
+            max(self.g.contents.score.vulnerability, 10) / 10,
+            self.g.contents.score.points / self.MAX_SCORE
+            ]), -1, 1)
+
+    def _seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+
+    def _reset(self):
+        sf.initGame(self.g)
         sf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
         self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
+        self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
         if self.videofile and not self.video:
-            self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
             vf = "%s.avi" % self.videofile
             self.video = cv2.VideoWriter(vf, cv2.VideoWriter_fourcc(*"H264"), self.metadata['video.frames_per_second'], (self.w,self.h))
             if self.videofile2!=None and platform.system() != "Windows":
@@ -138,7 +169,7 @@ class SSF_Env(gym.Env):
                     os.unlink(self.videofile2)
                 os.symlink(vf, self.videofile2)
             self.video.write(self.game_gray_rgb)
-        return self.game_state
+        return self.game_gray_rgb
 
     def _render(self, mode='human', close=False):
         if close:
@@ -207,13 +238,16 @@ class SSF_Env(gym.Env):
         reward = self.g.contents.reward
         sf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
         self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
+        self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
         done = sf.isGameOver(self.g)
         if self.videofile:
-            self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
             self.video.write(self.game_gray_rgb)
             if done:
                 self.video.release()
                 cv2.destroyAllWindows()
                 self.video = None
         self.last_action = action
-        return self.game_state, reward, done, {}
+        if self.obs_type == 'image':
+            return self.game_state, reward, done, {}
+        else:
+            return self._get_features(), reward, done, {}

@@ -71,6 +71,7 @@ typedef struct {
   Timer deathTimer;
   bool thrustFlag;
   Turn turnFlag;
+  double vdir;
 } Ship;
 
 typedef struct {
@@ -135,6 +136,7 @@ typedef struct {
     double acceleration;
     Point startPosition, startVelocity;
     int startAngle;
+    double vdir;
   } ship;
   /* Game Modes */
   bool autoTurn;
@@ -183,6 +185,7 @@ bool isGameOver(Game *game);
 
 Game* makeAutoTurnGame(bool grayscale);
 Game* makeExplodeGame(bool grayscale);
+void initGame(Game *game);
 void freeGame(Game *game);
 
 void dumpSexpGameState(Game *game, char *buf, size_t size);
@@ -190,5 +193,7 @@ void dumpSexpGameState(Game *game, char *buf, size_t size);
 bool openLog(Game *game, char *path);
 void closeLog(Game *game);
 bool logGameState(Game *game);
+
+double vdir(const Object *ship, const Object *fortress);
 
 #endif
