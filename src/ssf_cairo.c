@@ -194,17 +194,20 @@ void drawKeyState( cairo_t *ctx, float ls, bool left, bool right, bool thrust, b
   cairo_fill(ctx);
 }
 
-void drawVlner( cairo_t *ctx, int vlner, float ls, bool grayscale) {
+void drawVlner( cairo_t *ctx, int vlner, bool kill, float ls, bool grayscale) {
   int score_y = 210;
   double start = 210;
 
   cairo_set_line_width( ctx, ls-1 );
 
-  cairo_set_source_rgb(ctx, .25, .25, .25);
+  cairo_set_source_rgb(ctx, .33, .33, .33);
   cairo_rectangle(ctx, start-100, score_y+187, 200, 10);
   cairo_fill(ctx);
 
-  cairo_set_source_rgb(ctx, .75, .75, .75);
+  if (kill)
+    cairo_set_source_rgb(ctx, 1, 1, 1);
+  else
+    cairo_set_source_rgb(ctx, .66, .66, .66);
   cairo_rectangle(ctx, start-100, score_y+187, 20*(vlner>10 ? 10 : vlner), 10);
   cairo_fill(ctx);
 }
@@ -250,6 +253,6 @@ void drawGameStateScaled( Game *g, cairo_surface_t *surface, float scale, float 
   drawJustGameStuff( ctx, g, ls );
   // drawKeyState( ctx, ls, g->keys.left, g->keys.right, g->keys.thrust, g->keys.fire, g->grayscale);
   drawScore( ctx, g->score.points, ls, g->grayscale);
-  drawVlner( ctx, g->score.vulnerability, ls, g->grayscale);
+  drawVlner( ctx, g->score.vulnerability, (g->score.vulnerability > 10) && (g->fortress.vulnerabilityTimer < g->config.fortress.vulnerabilityTime), ls, g->grayscale);
   cairo_destroy( ctx );
 }
