@@ -124,10 +124,6 @@ class SSF_Env(gym.Env):
         self.pb = sf.newPixelBuffer(self.g, self.w, self.h)
         self.raw_pixels = sf.get_pixel_buffer_data(self.pb)
 
-        self.videofile = None
-        self.videofile2 = None
-        self.video = None
-
         self.MAX_SCORE = int(((self.g.contents.config.gameTime/1000) / (.250 * 11 + 1)) * (100-2*12))
 
         if self.obs_type == 'image':
@@ -161,15 +157,10 @@ class SSF_Env(gym.Env):
         sf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
         self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
         self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
-        if self.videofile and not self.video:
-            vf = "%s.avi" % self.videofile
-            self.video = cv2.VideoWriter(vf, cv2.VideoWriter_fourcc(*"H264"), self.metadata['video.frames_per_second'], (self.w,self.h))
-            if self.videofile2!=None and platform.system() != "Windows":
-                if os.path.exists(self.videofile2):
-                    os.unlink(self.videofile2)
-                os.symlink(vf, self.videofile2)
-            self.video.write(self.game_gray_rgb)
-        return self.game_gray_rgb
+        if self.obs_type == 'image':
+            return self.game_state
+        else:
+            return self._get_features()
 
     def _render(self, mode='human', close=False):
         if close:
@@ -240,12 +231,6 @@ class SSF_Env(gym.Env):
         self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
         self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
         done = sf.isGameOver(self.g)
-        if self.videofile:
-            self.video.write(self.game_gray_rgb)
-            if done:
-                self.video.release()
-                cv2.destroyAllWindows()
-                self.video = None
         self.last_action = action
         if self.obs_type == 'image':
             return self.game_state, reward, done, {}

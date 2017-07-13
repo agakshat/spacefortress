@@ -20,8 +20,8 @@ from rl.callbacks import FileLogger, ModelIntervalCheckpoint
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)),"../"))
 
-import ssf
-import ssf.gym
+import spacefortress as sf
+import spacefortress.gym
 
 import cv2
 import numpy as np
@@ -88,6 +88,7 @@ class SSFProcessor(Processor):
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--gametype', choices=["explode","autoturn"], default="explode")
+parser.add_argument('--obstype', choices=["image","features"], default="image")
 parser.add_argument('--mode', choices=["train","test"], default="train")
 parser.add_argument('--weights', type=str, default=None)
 parser.add_argument('--policy', choices=["eps","tau"], default="eps")
@@ -97,43 +98,57 @@ parser.add_argument('--visualize', action='store_true')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
-env = ssf.gym.SSF_Env(gametype=args.gametype, scale=.2, ls=3, action_set=args.actionset)
+env_name = 'SpaceFortress-{}-{}-v0'.format(args.gametype, args.obstype)
+env = gym.make(env_name)
 np.random.seed(123)
 env.seed(123)
 nb_actions = env.action_space.n
 
 TRAIN_INTERVAL = int(np.ceil(5 / env.tickdur))
 
-# Next, we build our model. We use the same model that was described by Mnih et al. (2015).
 if args.algo == "sarsa":
     WINDOW_LENGTH = 1
 input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
+
 model = Sequential()
-if K.image_dim_ordering() == 'tf':
-    # (width, height, channels)
-    model.add(Permute((2, 3, 1), input_shape=input_shape))
-elif K.image_dim_ordering() == 'th':
-    # (channels, width, height)
-    model.add(Permute((1, 2, 3), input_shape=input_shape))
+if args.obstype == "image":
+    processor = SSFProcessor()
+    # Next, we build our model. We use the same model that was described by Mnih et al. (2015).
+    if K.image_dim_ordering() == 'tf':
+        # (width, height, channels)
+        model.add(Permute((2, 3, 1), input_shape=input_shape))
+    elif K.image_dim_ordering() == 'th':
+        # (channels, width, height)
+        model.add(Permute((1, 2, 3), input_shape=input_shape))
+    else:
+        raise RuntimeError('Unknown image_dim_ordering.')
+    model.add(Conv2D(32, (8, 8), strides=(4, 4)))
+    model.add(Activation('relu'))
+    model.add(Conv2D(64, (4, 4), strides=(2, 2)))
+    model.add(Activation('relu'))
+    model.add(Conv2D(64, (3, 3), strides=(1, 1)))
+    model.add(Activation('relu'))
+    model.add(Flatten())
+    model.add(Dense(512))
+    model.add(Activation('relu'))
+    model.add(Dense(nb_actions))
+    model.add(Activation('linear'))
 else:
-    raise RuntimeError('Unknown image_dim_ordering.')
-model.add(Conv2D(32, (8, 8), strides=(4, 4)))
-model.add(Activation('relu'))
-model.add(Conv2D(64, (4, 4), strides=(2, 2)))
-model.add(Activation('relu'))
-model.add(Conv2D(64, (3, 3), strides=(1, 1)))
-model.add(Activation('relu'))
-model.add(Flatten())
-model.add(Dense(512))
-model.add(Activation('relu'))
-model.add(Dense(nb_actions))
-model.add(Activation('linear'))
+    processor = None#SSFProcessor()
+    model.add(Flatten(input_shape=(WINDOW_LENGTH, ) + env.observation_space.shape))
+    model.add(Dense(64))
+    model.add(Activation('relu'))
+    model.add(Dense(64))
+    model.add(Activation('relu'))
+    model.add(Dense(64))
+    model.add(Activation('relu'))
+    model.add(Dense(nb_actions))
+    model.add(Activation('linear'))
 print(model.summary())
 
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
 # even the metrics!
 memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
-processor = SSFProcessor()
 
 # Select a policy. We use eps-greedy action selection, which means that a random action is selected
 # with probability eps. We anneal eps from 1.0 to 0.1 over the course of 1M steps. This is done so that
