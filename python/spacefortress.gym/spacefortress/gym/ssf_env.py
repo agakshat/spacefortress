@@ -142,9 +142,10 @@ class SSF_Env(gym.Env):
             self.g.contents.ship.vdir % 360 / 360,
             1 if self.g.contents.fortress.o.alive else 0,
             self.g.contents.fortress.o.angle / 360,
+            max(self.g.contents.score.vulnerability, 10) / 10,
+            1 if self.g.contents.score.vulnerability > 10 and self.g.contents.fortress.vulnerabilityTimer < self.g.contents.config.fortress.vulnerabilityTime else 0,
             len([m for m in self.g.contents.missiles if m.o.alive]) / sf.MAX_MISSILES,
             len([m for m in self.g.contents.shells if m.o.alive]) / sf.MAX_SHELLS,
-            max(self.g.contents.score.vulnerability, 10) / 10,
             self.g.contents.score.points / self.MAX_SCORE
             ]), -1, 1)
 
