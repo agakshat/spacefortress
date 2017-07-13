@@ -4,18 +4,25 @@ from pyglet.window import key
 import numpy as np
 
 import spacefortress as sf
+from spacefortress.util import ImageEncoder
 
-class SSF_Game(object):
+class SSF_Game(pyglet.app.EventLoop):
 
     FPS = 30
 
     def __init__(self, args):
+        super(SSF_Game, self).__init__()
         if args.gametype == "explode":
             self.g = sf.makeExplodeGame(grayscale=False)
         elif args.gametype == "autoturn":
             self.g = sf.makeAutoTurnGame(grayscale=False)
         self.w = self.g.contents.config.width
         self.h = self.g.contents.config.height
+
+        if args.video:
+            self.encoder = ImageEncoder(args.video, (self.h, self.w, 4), self.FPS)
+        else:
+            self.encoded = None
 
         platform = pyglet.window.get_platform()
         display = platform.get_default_display()
@@ -43,6 +50,8 @@ class SSF_Game(object):
     def draw(self):
         sf.drawGameStateScaled(self.g, self.pb, 1, 2)
         self.game_state = np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4)
+        if self.encoder:
+            self.encoder.capture_frame(self.game_state)
         image = pyglet.image.ImageData(self.w, self.h, 'BGRA', self.game_state.tobytes(), pitch=self.w * -4)
         self.game_window.clear()
         self.game_window.switch_to()
@@ -59,6 +68,8 @@ class SSF_Game(object):
             sf.pressKey(self.g, sf.LEFT_KEY)
         elif symbol == key.D:
             sf.pressKey(self.g, sf.RIGHT_KEY)
+        elif symbol == key.ESCAPE:
+            self.cleanup()
 
     def on_key_release(self, symbol, modifiers):
         if symbol == key.SPACE:
@@ -70,9 +81,13 @@ class SSF_Game(object):
         elif symbol == key.D:
             sf.releaseKey(self.g, sf.RIGHT_KEY)
 
+    def cleanup(self):
+        if self.encoder:
+            self.encoder.close()
+        self.exit()
+
     def update(self, dt):
         sf.stepOneTick(self.g, int(np.round(dt*1000)))
         self.draw()
         if sf.isGameOver(self.g):
             self.cleanup()
-            pyglet.app.exit()

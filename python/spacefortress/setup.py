@@ -29,7 +29,7 @@ setup(
     author='Shawn Betts',
     author_email='sabetts@andrew.cmu.edu',
     url='https://bitbucket.org/andersonlab/c-spacefortress',
-    packages=['spacefortress'],
+    packages=['spacefortress','spacefortress.util'],
     ext_modules=[extension_mod],
     license='GPL-2',
     classifiers=[
