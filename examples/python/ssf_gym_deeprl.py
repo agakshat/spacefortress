@@ -154,11 +154,13 @@ if args.obstype == "image":
 else:
     processor = SSFProcessor(image=False)
     model.add(Flatten(input_shape=(WINDOW_LENGTH, ) + env.observation_space.shape))
-    model.add(Dense(64))
+    model.add(Dense(128))
     model.add(Activation('relu'))
-    model.add(Dense(64))
+    model.add(Dense(128))
     model.add(Activation('relu'))
-    model.add(Dense(64))
+    model.add(Dense(128))
+    model.add(Activation('relu'))
+    model.add(Dense(128))
     model.add(Activation('relu'))
     model.add(Dense(nb_actions))
     model.add(Activation('linear'))
@@ -167,7 +169,7 @@ print(model.summary())
 memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
 
 if args.policy == "eps":
-    policy = EpochLinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1, value_min=.1, value_test=.01, nb_epochs=10)
+    policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1, value_min=.01, value_test=.01, nb_steps=EPISODE_LENGTH*args.episodes)
 elif args.policy == "tau":
     policy = BoltzmannQPolicy()#EpochLinearAnnealedPolicy(BoltzmannQPolicy(), attr='tau', value_max=1, value_min=.1, value_test=.01, nb_epochs=10)
 
@@ -188,10 +190,11 @@ tmp_dir = tempfile.mkdtemp(prefix='{}-'.format(env_name))
 env_mon = wrappers.Monitor(env, tmp_dir)
 
 for e in xrange(args.epochs):
-    if args.policy == "eps" and e % 10 == 0:
-        policy.reset()
-    env.videofile = None
+    # if args.policy == "eps" and e % 10 == 0:
+    #     policy.reset()
+    # env.videofile = None
     agent.fit(env, callbacks=callbacks, nb_max_start_steps=30, nb_steps=EPISODE_LENGTH*args.episodes, log_interval=10000, verbose=2, action_repetition=2, nb_max_episode_steps=EPISODE_LENGTH, visualize=args.visualize)
     agent.nb_steps_warmup = 0
     agent.save_weights(weights_filename, overwrite=True)
     agent.test(env_mon, nb_episodes=1, visualize=True)
+    policy.value_max = policy.value_max * .99
