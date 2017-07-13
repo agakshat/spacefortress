@@ -684,7 +684,7 @@ void dumpSexpGameState(Game *game, char *buf, size_t size) {
   n = snprintf(buf, size,
                "(:screen-type \"game\""
                " :mode \"events\""
-               " :game \"explode\""
+               " :game %s"
                " :time %d"
                " :missiles (%s)"
                " :shells (%s)"
@@ -701,6 +701,7 @@ void dumpSexpGameState(Game *game, char *buf, size_t size) {
                " :events %s"
                " :keys nil"
                ")",
+               game->config.autoTurn ? "\"autoturn\"" : "\"explode\"",
                game->time,
                missiles,
                shells,
