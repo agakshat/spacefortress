@@ -158,7 +158,7 @@ void drawScore( cairo_t *ctx, int pnts, float ls, bool grayscale) {
   cairo_set_source_rgb(ctx, .5, .5, .5);
 
   char text[256];
-  sprintf(text, "%04d", pnts);
+  sprintf(text, "%07d", pnts);
   centeredText(ctx, text, start, score_y-193);
 }
 

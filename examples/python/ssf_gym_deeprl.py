@@ -4,6 +4,9 @@ import argparse
 from PIL import Image
 import numpy as np
 import gym
+from gym import wrappers
+
+import tempfile
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten, Conv2D, Permute
@@ -47,13 +50,17 @@ class EpochLinearAnnealedPolicy(Policy):
         self.value_min = value_min
         self.value_test = value_test
         self.nb_epochs = nb_epochs
+        self.epoch = 0
+
+    def reset(self):
+        self.epoch = self.agent.epoch
 
     def get_current_value(self):
         if self.agent.training:
             # Linear annealed: f(x) = ax + b.
             a = -float(self.value_max - self.value_min) / float(self.nb_epochs)
             b = float(self.value_max)
-            value = max(self.value_min, a * float(self.agent.epoch-1) + b)
+            value = max(self.value_min, a * float(self.agent.epoch-1-self.epoch) + b)
         else:
             value = self.value_test
         # print(self.value_min, value, self.value_max)
@@ -82,15 +89,26 @@ class EpochLinearAnnealedPolicy(Policy):
         return config
 
 class SSFProcessor(Processor):
+
+    def __init__(self, image=True):
+        self.image = image
+
     def process_state_batch(self, batch):
-        processed_batch = batch.astype('float32') / 255.
-        return processed_batch
+        if self.image:
+            processed_batch = batch.astype('float32') / 255.
+            return processed_batch
+        else:
+            return batch
+
+    def process_reward(self, reward):
+        return reward/1000.
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--gametype', choices=["explode","autoturn"], default="explode")
 parser.add_argument('--obstype', choices=["image","features"], default="image")
-parser.add_argument('--mode', choices=["train","test"], default="train")
 parser.add_argument('--weights', type=str, default=None)
+parser.add_argument('--episodes', type=int, default=10)
+parser.add_argument('--epochs', type=int, default=100)
 parser.add_argument('--policy', choices=["eps","tau"], default="eps")
 parser.add_argument('--algo', choices=["dqn","sarsa"], default="dqn")
 parser.add_argument('--actionset', choices=[0,1,2], default=0, type=int)
@@ -112,7 +130,7 @@ input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
 
 model = Sequential()
 if args.obstype == "image":
-    processor = SSFProcessor()
+    processor = SSFProcessor(image=True)
     # Next, we build our model. We use the same model that was described by Mnih et al. (2015).
     if K.image_dim_ordering() == 'tf':
         # (width, height, channels)
@@ -134,7 +152,7 @@ if args.obstype == "image":
     model.add(Dense(nb_actions))
     model.add(Activation('linear'))
 else:
-    processor = None#SSFProcessor()
+    processor = SSFProcessor(image=False)
     model.add(Flatten(input_shape=(WINDOW_LENGTH, ) + env.observation_space.shape))
     model.add(Dense(64))
     model.add(Activation('relu'))
@@ -146,24 +164,12 @@ else:
     model.add(Activation('linear'))
 print(model.summary())
 
-# Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
-# even the metrics!
 memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
 
-# Select a policy. We use eps-greedy action selection, which means that a random action is selected
-# with probability eps. We anneal eps from 1.0 to 0.1 over the course of 1M steps. This is done so that
-# the agent initially explores the environment (high eps) and then gradually sticks to what it knows
-# (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
-# so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
 if args.policy == "eps":
-    policy = EpochLinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.1, value_min=.01, value_test=.01, nb_epochs=100)
-
-# The trade-off between exploration and exploitation is difficult and an on-going research topic.
-# If you want, you can experiment with the parameters or use a different policy. Another popular one
-# is Boltzmann-style exploration:
+    policy = EpochLinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1, value_min=.1, value_test=.01, nb_epochs=10)
 elif args.policy == "tau":
-    policy = EpochLinearAnnealedPolicy(BoltzmannQPolicy(), attr='tau', value_max=1, value_min=.1, value_test=.1, nb_epochs=100)
-# Feel free to give it a try!
+    policy = BoltzmannQPolicy()#EpochLinearAnnealedPolicy(BoltzmannQPolicy(), attr='tau', value_max=1, value_min=.1, value_test=.01, nb_epochs=10)
 
 if args.algo == "dqn":
     agent = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, test_policy=policy, memory=memory,
@@ -174,27 +180,18 @@ elif args.algo == "sarsa":
 
 agent.compile(Adadelta(lr=1), metrics=['mae'])
 
-# Okay, now it's time to learn something! We capture the interrupt exception so that training
-# can be prematurely aborted. Notice that you can the built-in Keras callbacks!
 weights_filename = 'ssf_%s_%s_%s_weights.h5f' % (args.gametype, args.algo, args.policy)
 log_filename = 'ssf_%s_%s_%s_log.json' % (args.gametype, args.algo, args.policy)
 callbacks = []
 
-if args.mode == 'train':
-    while True:
-        env.videofile = None
-        agent.fit(env, callbacks=callbacks, nb_max_start_steps=30, nb_steps=EPISODE_LENGTH*10, log_interval=10000, verbose=2, action_repetition=2, nb_max_episode_steps=EPISODE_LENGTH, visualize=args.visualize)
-        agent.nb_steps_warmup = 0
-        # After training is done, we save the final weights one more time.
-        agent.save_weights(weights_filename, overwrite=True)
-        # Finally, evaluate our algorithm for 10 episodes.
-        env.videofile = 'ssf_%s_%s_%s_epoch-%d' % (args.gametype, args.algo, args.policy, agent.epoch)
-        env.videofile2 = 'ssf_%s_%s_%s_latest.avi' % (args.gametype, args.algo, args.policy)
-        agent.test(env, nb_episodes=1, visualize=args.visualize)
-elif args.mode == 'test':
-    if args.weights:
-        weights_filename = args.weights
-        agent.load_weights(weights_filename)
-    env.videofile = 'ssf_%s_%s_%s_test' % (args.gametype, args.algo, args.policy)
-    env.videofile2 = None
-    agent.test(env, nb_episodes=1, visualize=args.visualize)
+tmp_dir = tempfile.mkdtemp(prefix='{}-'.format(env_name))
+env_mon = wrappers.Monitor(env, tmp_dir)
+
+for e in xrange(args.epochs):
+    if args.policy == "eps" and e % 10 == 0:
+        policy.reset()
+    env.videofile = None
+    agent.fit(env, callbacks=callbacks, nb_max_start_steps=30, nb_steps=EPISODE_LENGTH*args.episodes, log_interval=10000, verbose=2, action_repetition=2, nb_max_episode_steps=EPISODE_LENGTH, visualize=args.visualize)
+    agent.nb_steps_warmup = 0
+    agent.save_weights(weights_filename, overwrite=True)
+    agent.test(env_mon, nb_episodes=1, visualize=True)

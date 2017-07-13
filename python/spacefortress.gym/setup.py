@@ -14,7 +14,7 @@ setup(
     author='Shawn Betts',
     author_email='sabetts@andrew.cmu.edu',
     url='https://bitbucket.org/andersonlab/c-spacefortress',
-    packages=['spacefortress.gym'],
+    packages=['spacefortress.gym','spacefortress.gym.envs','spacefortress.gym.scoreboard'],
     license='GPL-2',
     install_requires=['numpy','gym','spacefortress'],
     classifiers=[

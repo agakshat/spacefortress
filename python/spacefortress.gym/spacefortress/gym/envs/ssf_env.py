@@ -156,11 +156,12 @@ class SSF_Env(gym.Env):
     def _reset(self):
         sf.initGame(self.g)
         sf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
-        self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
-        self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
         if self.obs_type == 'image':
+            self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
+            self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
             return self.game_state
         else:
+            self.game_state = np.array([])
             return self._get_features()
 
     def _render(self, mode='human', close=False):
@@ -173,6 +174,11 @@ class SSF_Env(gym.Env):
         if self.viewer is None:
             self.viewer = SSF_Viewer()
 
+        if self.obs_type == 'features' and self.game_state.shape == (0,):
+            sf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
+            self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
+            self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
+
         self.viewer.imshow(self.game_state)
 
         if mode == 'rgb_array':
@@ -180,6 +186,11 @@ class SSF_Env(gym.Env):
 
     def _destroy(self):
         pass
+
+    def _draw(self):
+        sf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
+        self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
+        self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
 
     def _step(self, action):
         done = False
@@ -228,12 +239,11 @@ class SSF_Env(gym.Env):
                     sf.releaseKey(self.g, sf.RIGHT_KEY)
         sf.stepOneTick(self.g, self.tickdur)
         reward = self.g.contents.reward
-        sf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
-        self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
-        self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
         done = sf.isGameOver(self.g)
         self.last_action = action
         if self.obs_type == 'image':
+            self._draw()
             return self.game_state, reward, done, {}
         else:
+            self.game_state = np.array([])
             return self._get_features(), reward, done, {}

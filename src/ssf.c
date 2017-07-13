@@ -294,7 +294,7 @@ void fireMissile(Game *game) {
         game->missiles[i].o.velocity.x = game->config.missile.speed * cos(rad(game->ship.o.angle));
         game->missiles[i].o.velocity.y = -game->config.missile.speed * sin(rad(game->ship.o.angle));
 
-        penalize(game, game->config.missilePenalty);
+        // penalize(game, game->config.missilePenalty);
         playSound(FIRE_MISSILE_SOUND);
         addEvent(game, MISSILE_FIRED_EVENT);
         return;
@@ -421,8 +421,8 @@ void updateMissiles(Game *game) {
         if (game->fortress.o.alive) {
           if (game->fortress.vulnerabilityTimer >= game->config.fortress.vulnerabilityTime) {
             game->score.vulnerability += 1;
-            // if (game->score.vulnerability < 11)
-            //   reward(game, triangularNumber(game->score.vulnerability));
+            if (game->score.vulnerability < 11)
+              reward(game, triangularNumber(game->score.vulnerability));
             addEvent(game, VLNER_INCREASED_EVENT);
           } else {
             if (game->score.vulnerability >= game->config.fortress.vulnerabilityThreshold + 1) {
@@ -432,7 +432,7 @@ void updateMissiles(Game *game) {
               playSound(EXPLOSION_SOUND);
               addEvent(game, FORTRESS_DESTROYED_EVENT);
             } else {
-              // penalize(game, game->score.vulnerability);
+              penalize(game, game->score.vulnerability);
               playSound(VLNER_RESET_SOUND);
               addEvent(game, VLNER_RESET_EVENT);
             }
@@ -441,7 +441,7 @@ void updateMissiles(Game *game) {
           game->fortress.vulnerabilityTimer = 0;
         }
       } else if (isOutsideGameArea(game, &game->missiles[i].o.position)) {
-        // penalize(game, game->config.missilePenalty);
+        penalize(game, game->config.missilePenalty);
         game->missiles[i].o.alive = false;
       }
     }
@@ -517,7 +517,7 @@ void baseConfig(Game *game, bool autoturn) {
   config->height = 420;
   config->gameTime = 180000;
   /* Points */
-  config->destroyFortress = 100;
+  config->destroyFortress = 1000;
   config->shipDeathPenalty = 100;
   config->missilePenalty = 2;
   // config->hitReward = 1;

@@ -11,10 +11,11 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--gametype', choices=["explode","autoturn"], default="explode")
+    parser.add_argument('--obstype', choices=["image","features"], default="image")
     parser.add_argument('--visualize', action='store_true')
     args = parser.parse_args()
 
-    env_name = 'SpaceFortress-{}-v0'.format(args.gametype)
+    env_name = 'SpaceFortress-{}-{}-v0'.format(args.gametype, args.features)
     env = gym.make(env_name)
     tmp_dir = tempfile.mkdtemp(prefix='{}-'.format(env_name))
     print(tmp_dir)
