@@ -67,7 +67,10 @@ class Ship(Structure):
                 ("deathTimer", Timer),
                 ("thrustFlag", c_bool),
                 ("turnFlag", Turn),
-                ("vdir", c_double)]
+                ("vdir", c_double),
+                ("speed", c_double),
+                ("fdist", c_double),
+                ("ndist", c_double)]
 
 class Fortress(Structure):
     _fields_ = [("o", Object),
@@ -128,7 +131,10 @@ class ShipConfig(Structure):
                 ("startPosition", Point),
                 ("startVelocity", Point),
                 ("startAngle", c_int),
-                ("vdir", c_double),]
+                ("vdir", c_double),
+                ("speed", c_double),
+                ("fdist", c_double),
+                ("ndist", c_double)]
 
 class Config(Structure):
     _fields_ = [("width", c_int),

@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('--visualize', action='store_true')
     args = parser.parse_args()
 
-    env_name = 'SpaceFortress-{}-{}-v0'.format(args.gametype, args.features)
+    env_name = 'SpaceFortress-{}-{}-v0'.format(args.gametype, args.obstype)
     env = gym.make(env_name)
     tmp_dir = tempfile.mkdtemp(prefix='{}-'.format(env_name))
     print(tmp_dir)

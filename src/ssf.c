@@ -395,6 +395,9 @@ void updateShip(Game *game) {
     game->ship.o.position.x += game->ship.o.velocity.x;
     game->ship.o.position.y -= game->ship.o.velocity.y;
     game->ship.vdir = vdir(&game->ship.o, &game->fortress.o);
+    game->ship.speed = norm(game->ship.o.velocity.x, game->ship.o.velocity.y);
+    game->ship.fdist = norm(game->ship.o.position.x-game->fortress.o.position.x, game->ship.o.position.y-game->fortress.o.position.y);
+    game->ship.ndist = normDist(game->ship.fdist, game->config.bigHex, game->config.smallHex);
 
     if (!insideHexagon(&game->bigHex, &game->ship.o.position)) {
       killShip(game);
@@ -546,6 +549,9 @@ void baseConfig(Game *game, bool autoturn) {
   config->ship.startVelocity.y = sin(rad(60));
   config->ship.startAngle = 0;
   config->ship.vdir = vdir(&game->ship.o, &game->fortress.o);
+  config->ship.speed = norm(game->ship.o.velocity.x, game->ship.o.velocity.y);
+  config->ship.fdist = norm(game->ship.o.position.x-game->fortress.o.position.x, game->ship.o.position.y-game->fortress.o.position.y);
+  config->ship.ndist = normDist(game->ship.fdist, game->config.bigHex, game->config.smallHex);
   /* Game Modes */
   config->autoTurn = autoturn;
 }
@@ -637,6 +643,10 @@ int dumpProjectile(const Object *o, char *buf, size_t size) {
   return n;
 }
 
+double normDist(double fdist, double bigHex, double smallHex) {
+  return -1 + (fdist - smallHex) / ((bigHex - smallHex) / 2.0);
+}
+
 double vdir(const Object *ship, const Object *fortress) {
   if (norm(ship->velocity.x, ship->velocity.y) == 0.0) {
     return 0.0;
@@ -701,9 +711,9 @@ void dumpSexpGameState(Game *game, char *buf, size_t size) {
                game->ship.o.velocity.x,
                game->ship.o.velocity.y,
                game->ship.o.angle,
-               norm(game->ship.o.position.x-game->fortress.o.position.x, game->ship.o.position.y-game->fortress.o.position.y),
-               vdir(&game->ship.o, &game->fortress.o),
-               norm(game->ship.o.velocity.x, game->ship.o.velocity.y),
+               game->ship.fdist,
+               game->ship.vdir,
+               game->ship.speed,
                game->fortress.o.alive ? "t":"nil",
                game->fortress.o.position.x,
                game->fortress.o.position.y,

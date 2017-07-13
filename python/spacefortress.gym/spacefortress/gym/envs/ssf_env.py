@@ -140,6 +140,7 @@ class SSF_Env(gym.Env):
             self.g.contents.ship.o.velocity.y / 10,
             self.g.contents.ship.o.angle / 360,
             self.g.contents.ship.vdir % 360 / 360,
+            self.g.contents.ship.ndist,
             1 if self.g.contents.fortress.o.alive else 0,
             self.g.contents.fortress.o.angle / 360,
             max(self.g.contents.score.vulnerability, 10) / 10,

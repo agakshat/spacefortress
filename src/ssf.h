@@ -72,6 +72,9 @@ typedef struct {
   bool thrustFlag;
   Turn turnFlag;
   double vdir;
+  double speed;
+  double fdist;
+  double ndist;
 } Ship;
 
 typedef struct {
@@ -136,7 +139,7 @@ typedef struct {
     double acceleration;
     Point startPosition, startVelocity;
     int startAngle;
-    double vdir;
+    double vdir, speed, fdist, ndist;
   } ship;
   /* Game Modes */
   bool autoTurn;
@@ -195,5 +198,6 @@ void closeLog(Game *game);
 bool logGameState(Game *game);
 
 double vdir(const Object *ship, const Object *fortress);
+double normDist(double fdist, double bigHex, double smallHex);
 
 #endif
