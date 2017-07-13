@@ -253,6 +253,8 @@ void resetShip (Game *game) {
   game->ship.o.velocity.x = game->config.ship.startVelocity.x;
   game->ship.o.velocity.y = game->config.ship.startVelocity.y;
   game->ship.o.angle = game->config.ship.startAngle;
+  game->ship.thrustFlag = false;
+  game->ship.turnFlag == NO_TURN;
 }
 
 void monitorShipRespawn(Game *game) {
