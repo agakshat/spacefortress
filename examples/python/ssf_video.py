@@ -20,8 +20,7 @@ def parse_args():
     args.game = args.game[0]
     return args
 
-def play_like_an_idiot(g, last_key):
-    keys = [sf.FIRE_KEY, sf.THRUST_KEY, sf.LEFT_KEY, sf.RIGHT_KEY]
+def play_like_an_idiot(g, last_key, keys):
     if g.contents.tick % FPS == 0:
         if last_key != None:
             sf.releaseKey(g, last_key)
@@ -34,8 +33,10 @@ if __name__ == "__main__":
     print(args.game)
     if args.game == "explode":
         g = sf.makeExplodeGame(args.grayscale)
+        keys = [sf.FIRE_KEY, sf.THRUST_KEY, sf.LEFT_KEY, sf.RIGHT_KEY]
     elif args.game == "autoturn":
         g = sf.makeAutoTurnGame(args.grayscale)
+        keys = [sf.FIRE_KEY, sf.THRUST_KEY]
     scale = args.scale
     w = int(math.ceil(g.contents.config.width * scale))
     h = int(math.ceil(g.contents.config.height * scale))
@@ -54,7 +55,7 @@ if __name__ == "__main__":
     last_key = None
     print "start playing"
     while not sf.isGameOver(g):
-        last_key = play_like_an_idiot(g, last_key)
+        last_key = play_like_an_idiot(g, last_key, keys)
         sf.stepOneTick(g, 33)
         sf.drawGameStateScaled(g, pb, scale, args.linesize)
         if encoder:

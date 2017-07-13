@@ -143,6 +143,7 @@ class Config(Structure):
                 ("destroyFortress", c_int),
                 ("shipDeathPenalty", c_int),
                 ("missilePenalty", c_int),
+                ("hitReward", c_int),
                 # shell
                 ("shell", ProjectileConfig),
                 # fortress
@@ -153,7 +154,8 @@ class Config(Structure):
                 ("missile", ProjectileConfig),
                 # ship
                 ("ship", ShipConfig),
-                ("autoTurn", c_bool)]
+                ("autoTurn", c_bool),
+                ("grayscale", c_bool)]
 
 class Game(Structure):
     _fields_ = [("config", Config),
@@ -167,6 +169,7 @@ class Game(Structure):
                 ("score", Score),
                 ("stats", Stats),
                 ("reward", c_int),
+                ("grayscale", c_bool),
                 ("tick", c_int),
                 ("time", c_int),
                 ("collisions", Collisions),
