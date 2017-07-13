@@ -10,10 +10,11 @@ import spacefortress.gym
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--gametype', choices=["explode","autoturn"], default="explode")
+    parser.add_argument('--game', choices=["explode","autoturn"], default=["explode"], help="Game type.", nargs=1)
     parser.add_argument('--obstype', choices=["image","features"], default="image")
     parser.add_argument('--visualize', action='store_true')
     args = parser.parse_args()
+    args.game = args.game[0]
 
     env_name = 'SpaceFortress-{}-{}-v0'.format(args.gametype, args.obstype)
     env = gym.make(env_name)

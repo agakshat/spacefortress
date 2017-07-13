@@ -104,7 +104,7 @@ class SSFProcessor(Processor):
         return reward/1000.
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--gametype', choices=["explode","autoturn"], default="explode")
+parser.add_argument('--game', choices=["explode","autoturn"], default=["explode"], help="Game type.", nargs=1)
 parser.add_argument('--obstype', choices=["image","features"], default="image")
 parser.add_argument('--weights', type=str, default=None)
 parser.add_argument('--episodes', type=int, default=10)
@@ -114,6 +114,7 @@ parser.add_argument('--algo', choices=["dqn","sarsa"], default="dqn")
 parser.add_argument('--actionset', choices=[0,1,2], default=0, type=int)
 parser.add_argument('--visualize', action='store_true')
 args = parser.parse_args()
+args.game = args.game[0]
 
 # Get the environment and extract the number of actions.
 env_name = 'SpaceFortress-{}-{}-v0'.format(args.gametype, args.obstype)

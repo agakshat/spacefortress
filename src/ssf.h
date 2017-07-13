@@ -143,6 +143,7 @@ typedef struct {
   } ship;
   /* Game Modes */
   bool autoTurn;
+  bool grayscale;
 } Config;
 
 typedef struct {

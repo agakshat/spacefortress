@@ -514,8 +514,9 @@ bool isGameOver(Game *game) {
   return game->time >= game->config.gameTime;
 }
 
-void baseConfig(Game *game, bool autoturn) {
+void baseConfig(Game *game, bool autoturn, bool grayscale) {
   Config *config = &game->config;
+  config->grayscale = grayscale;
   config->width = 420;
   config->height = 420;
   config->gameTime = 180000;
@@ -556,12 +557,12 @@ void baseConfig(Game *game, bool autoturn) {
   config->autoTurn = autoturn;
 }
 
-void autoTurnConfig(Game *game) {
-  baseConfig(game, true);
+void autoTurnConfig(Game *game, bool grayscale) {
+  baseConfig(game, true, grayscale);
 }
 
-void explodeConfig(Game *game) {
-  baseConfig(game, false);
+void explodeConfig(Game *game, bool grayscale) {
+  baseConfig(game, false, grayscale);
 }
 
 void initGame(Game *game) {
@@ -592,7 +593,7 @@ void initGame(Game *game) {
 
   game->reward = 0;
 
-  game->grayscale = false;
+  game->grayscale = game->config.grayscale;
 
   game->score.points = 0;
   game->score.rawPoints = 0;
@@ -608,9 +609,8 @@ Game* makeAutoTurnGame(bool grayscale) {
   Game *g = malloc(sizeof(Game));
   memset((void *)g, 0, sizeof(Game));
   if (g != NULL) {
-    autoTurnConfig(g);
+    autoTurnConfig(g, grayscale);
     initGame(g);
-    g->grayscale = grayscale;
   }
   return g;
 }
@@ -618,9 +618,8 @@ Game* makeAutoTurnGame(bool grayscale) {
 Game* makeExplodeGame(bool grayscale) {
   Game *g = malloc(sizeof(Game));
   if (g != NULL) {
-    explodeConfig(g);
+    explodeConfig(g, grayscale);
     initGame(g);
-    g->grayscale = grayscale;
   }
   return g;
 }

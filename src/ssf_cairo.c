@@ -120,16 +120,25 @@ void drawExplosion( cairo_t *ctx, const Point* p, float ls, bool grayscale ) {
   for (radius=15; radius<70; radius += 8 ) {
     ofs += 3;
     if( radius < 60 ) {
-      cairo_set_source_rgb( ctx, 1,1,0 );
+      if (grayscale)
+        cairo_set_source_rgb( ctx, .75, .75, .75 );
+      else
+        cairo_set_source_rgb( ctx, 1,1,0 );
     } else {
-      cairo_set_source_rgb( ctx, 1,0,0 );
+      if (grayscale)
+        cairo_set_source_rgb( ctx, .5, .5, .5 );
+      else
+        cairo_set_source_rgb( ctx, 1,0,0 );
     }
     for (angle=0; angle<360; angle += 30 ) {
       cairo_arc( ctx, p->x, p->y, radius, deg2rad(angle+ofs),deg2rad(angle+ofs+10));
       cairo_stroke( ctx );
     }
   }
-  cairo_set_source_rgb( ctx, 1,1,0);
+  if (grayscale)
+    cairo_set_source_rgb( ctx, .75, .75, .75 );
+  else
+    cairo_set_source_rgb( ctx, 1,1,0);
   cairo_arc(ctx, p->x, p->y, 7, 0, M_PI*2);
   cairo_stroke( ctx );
 }
@@ -221,12 +230,12 @@ void drawJustGameStuff( cairo_t *ctx, Game *g, float ls ) {
   if( g->ship.o.alive ) {
     drawWireFrame( ctx, &shipWireFrame, &g->ship.o.position, g->ship.o.angle, g->grayscale ? 1 : -1 );
   } else {
-    drawExplosion( ctx, &g->ship.o.position, ls, g->grayscale ? 1 : -1 );
+    drawExplosion( ctx, &g->ship.o.position, ls, g->grayscale);
   }
   if( g->fortress.o.alive ) {
     drawWireFrame( ctx, &fortressWireFrame, &g->fortress.o.position, g->fortress.o.angle, g->grayscale ? 1 : -1 );
   } else {
-    drawExplosion( ctx, &g->fortress.o.position, ls, g->grayscale ? 1 : -1 );
+    drawExplosion( ctx, &g->fortress.o.position, ls, g->grayscale);
   }
   for (i=0; i<MAX_MISSILES; i++) {
     if (g->missiles[i].o.alive) {
