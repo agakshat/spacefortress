@@ -270,7 +270,7 @@ void fireShell(Game *game, double x, double y, double angle) {
   for (i=0; i<MAX_SHELLS; i++) {
     if (!game->shells[i].o.alive) {
       game->shells[i].o.alive = true;
-      game->missiles[i].o.collisionRadius = game->config.shell.collisionRadius;
+      game->shells[i].o.collisionRadius = game->config.shell.collisionRadius;
       game->shells[i].o.position.x = x;
       game->shells[i].o.position.y = y;
       game->shells[i].o.angle = angle;
