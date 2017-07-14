@@ -622,6 +622,7 @@ Game* makeAutoTurnGame(bool grayscale) {
 
 Game* makeExplodeGame(bool grayscale) {
   Game *g = malloc(sizeof(Game));
+  memset((void *)g, 0, sizeof(Game));
   if (g != NULL) {
     explodeConfig(g, grayscale);
     initGame(g);
