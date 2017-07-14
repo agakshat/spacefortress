@@ -278,6 +278,7 @@ void fireShell(Game *game, double x, double y, double angle) {
       game->shells[i].o.velocity.y = -game->config.shell.speed * sin(rad(angle));
       playSound(FIRE_SHELL_SOUND);
       addEvent(game, FORTRESS_FIRED_EVENT);
+      printf("fire shell\n");
       return;
     }
   }
@@ -405,6 +406,7 @@ void updateShip(Game *game) {
       killShip(game);
       game->collisions.bigHex = true;
       addEvent(game, EXPLODE_BIGHEX_EVENT);
+      printf("big hex\n");
     } else if (insideHexagon(&game->smallHex, &game->ship.o.position)) {
       killShip(game);
       game->collisions.smallHex = true;
@@ -464,6 +466,7 @@ void updateShells(Game *game) {
         game->shells[i].o.alive = false;
         killShip(game);
         addEvent(game, SHELL_HIT_SHIP_EVENT);
+        printf("death by shell\n");
       } else if (isOutsideGameArea(game, &game->shells[i].o.position)) {
         game->shells[i].o.alive = false;
       }

@@ -104,7 +104,7 @@ class SSFProcessor(Processor):
         return reward/1000.
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--game', choices=["explode","autoturn"], default=["explode"], help="Game type.", nargs=1)
+parser.add_argument('--game', choices=["explode","autoturn"], default=["explode"], nargs=1)
 parser.add_argument('--obstype', choices=["image","features"], default="image")
 parser.add_argument('--weights', type=str, default=None)
 parser.add_argument('--episodes', type=int, default=10)
@@ -117,7 +117,7 @@ args = parser.parse_args()
 args.game = args.game[0]
 
 # Get the environment and extract the number of actions.
-env_name = 'SpaceFortress-{}-{}-v0'.format(args.gametype, args.obstype)
+env_name = 'SpaceFortress-{}-{}-v0'.format(args.game, args.obstype)
 env = gym.make(env_name)
 np.random.seed(123)
 env.seed(123)
@@ -170,7 +170,7 @@ print(model.summary())
 memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
 
 if args.policy == "eps":
-    policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1, value_min=.01, value_test=.01, nb_steps=EPISODE_LENGTH*args.episodes)
+    policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.1, value_min=.001, value_test=.0001, nb_steps=EPISODE_LENGTH*args.episodes)
 elif args.policy == "tau":
     policy = BoltzmannQPolicy()#EpochLinearAnnealedPolicy(BoltzmannQPolicy(), attr='tau', value_max=1, value_min=.1, value_test=.01, nb_epochs=10)
 
@@ -183,8 +183,11 @@ elif args.algo == "sarsa":
 
 agent.compile(Adadelta(lr=1), metrics=['mae'])
 
-weights_filename = 'ssf_%s_%s_%s_weights.h5f' % (args.gametype, args.algo, args.policy)
-log_filename = 'ssf_%s_%s_%s_log.json' % (args.gametype, args.algo, args.policy)
+if args.weights:
+    agent.load_weights(args.weights)
+
+weights_filename = 'ssf_%s_%s_%s_weights.h5f' % (args.game, args.algo, args.policy)
+log_filename = 'ssf_%s_%s_%s_log.json' % (args.game, args.algo, args.policy)
 callbacks = []
 
 tmp_dir = tempfile.mkdtemp(prefix='{}-'.format(env_name))

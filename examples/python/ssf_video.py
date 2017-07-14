@@ -10,7 +10,7 @@ FPS = 30
 
 def parse_args():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--game', choices=["explode","autoturn"], default=["explode"], help="Game type.", nargs=1)
+    parser.add_argument('--game', choices=["explode","autoturn"], default=["explode"], nargs=1)
     parser.add_argument('--video', default="output.mp4", help="Specify the name of the video file.")
     parser.add_argument('--log',  default="output.log", help="Specify the name of the log file.")
     parser.add_argument('--scale', default=1, help="Scale of output image", type=float)

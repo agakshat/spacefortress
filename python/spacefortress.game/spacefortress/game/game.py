@@ -12,9 +12,9 @@ class SSF_Game(pyglet.app.EventLoop):
 
     def __init__(self, args):
         super(SSF_Game, self).__init__()
-        if args.gametype == "explode":
+        if args.game == "explode":
             self.g = sf.makeExplodeGame(grayscale=False)
-        elif args.gametype == "autoturn":
+        elif args.game == "autoturn":
             self.g = sf.makeAutoTurnGame(grayscale=False)
         self.w = self.g.contents.config.width
         self.h = self.g.contents.config.height
@@ -22,7 +22,7 @@ class SSF_Game(pyglet.app.EventLoop):
         if args.video:
             self.encoder = ImageEncoder(args.video, (self.h, self.w, 4), self.FPS)
         else:
-            self.encoded = None
+            self.encoder = None
 
         platform = pyglet.window.get_platform()
         display = platform.get_default_display()
@@ -80,6 +80,9 @@ class SSF_Game(pyglet.app.EventLoop):
             sf.releaseKey(self.g, sf.LEFT_KEY)
         elif symbol == key.D:
             sf.releaseKey(self.g, sf.RIGHT_KEY)
+
+    def on_close(self):
+        self.cleanup()
 
     def cleanup(self):
         if self.encoder:
