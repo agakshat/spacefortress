@@ -1,14 +1,14 @@
-#include "ssf_cairo.h"
+#include "draw.hh"
 
 #if CAIRO_HAS_FT_FONT
 #include <cairo/cairo-ft.h>
 
-cairo_font_face_t *loadFont( const char *filename ) {
+static cairo_font_face_t *loadFont( const char *filename ) {
   static FT_Library *cairoFT = NULL;
   static cairo_font_face_t *cairoFont = NULL;
   FT_Face face;
   FT_Error error;
-  static const cairo_user_data_key_t key;
+  static const cairo_user_data_key_t key = {};
   int status;
 
   if( cairoFont != NULL ) return cairoFont;
@@ -52,23 +52,21 @@ cairo_font_face_t *loadFont( const char *filename ) {
 
 #endif
 
-double deg2rad( double deg ) {
-  return deg * M_PI / 180;
-}
-
-PixelBuffer* newPixelBuffer( Game* g, int width, int height ) {
+PixelBuffer* newPixelBuffer( int width, int height, double scale, double line_width, bool grayscale ) {
   PixelBuffer* pb;
 
   pb = (PixelBuffer *)malloc( sizeof( PixelBuffer ));
   if( pb == NULL ) {
     return NULL;
   }
-  pb->surface = cairo_image_surface_create( CAIRO_FORMAT_RGB24,
-                                            width==0 ? g->config.width : width,
-                                            height==0 ? g->config.height : height );
+  pb->surface = cairo_image_surface_create( CAIRO_FORMAT_RGB24, width, height );
   pb->raw = cairo_image_surface_get_data( pb->surface );
+  pb->width = cairo_image_surface_get_width( pb->surface );
   pb->height = cairo_image_surface_get_height( pb->surface );
   pb->stride = cairo_image_surface_get_stride( pb->surface );
+  pb->grayscale = grayscale;
+  pb->scale = scale;
+  pb->line_width = line_width;
 
   return pb;
 }
@@ -78,11 +76,11 @@ void freePixelBuffer( PixelBuffer* pb ) {
   free(pb);
 }
 
-void drawWireFrame( cairo_t *ctx, const WireFrame* wf, const Point* p, int angle, float grayscale ) {
+static void drawWireFrame( cairo_t *ctx, const WireFrame* wf, const Vector* p, int angle, double grayscale ) {
   int i;
   cairo_save( ctx );
-  cairo_translate( ctx, p->x, p->y );
-  cairo_rotate( ctx, -deg2rad( angle ));
+  cairo_translate( ctx, p->mX, p->mY );
+  cairo_rotate( ctx, deg2rad( angle ));
   cairo_set_line_width( ctx, 3);
   if (grayscale<0 || grayscale>1)
     cairo_set_source_rgb( ctx, wf->r/255.0, wf->g/255.0, wf->b/255.0 );
@@ -90,29 +88,29 @@ void drawWireFrame( cairo_t *ctx, const WireFrame* wf, const Point* p, int angle
     cairo_set_source_rgb( ctx, grayscale, grayscale, grayscale );
 
   for (i=0; i<wf->lineCount; i++) {
-    cairo_move_to( ctx, wf->points[wf->lines[i].from].x, wf->points[wf->lines[i].from].y );
-    cairo_line_to( ctx, wf->points[wf->lines[i].to].x, wf->points[wf->lines[i].to].y );
+    cairo_move_to( ctx, wf->points[wf->lines[i].from].mX, wf->points[wf->lines[i].from].mY );
+    cairo_line_to( ctx, wf->points[wf->lines[i].to].mX, wf->points[wf->lines[i].to].mY );
   }
 
   cairo_stroke( ctx );
   cairo_restore( ctx );
 }
 
-void drawHexagon( cairo_t *ctx, Hexagon *h, float grayscale ) {
+static void drawHexagon( cairo_t *ctx, Hexagon *h, double grayscale ) {
   int i;
   if (grayscale<0 || grayscale>1)
     cairo_set_source_rgb( ctx, 0, 1, 0 );
   else
     cairo_set_source_rgb( ctx, grayscale, grayscale, grayscale );
-  cairo_move_to( ctx, h->points[0].x, h->points[0].y );
+  cairo_move_to( ctx, h->mPoints[0].mX, h->mPoints[0].mY );
   for (i=1; i<6; i++) {
-    cairo_line_to( ctx, h->points[i].x, h->points[i].y );
+    cairo_line_to( ctx, h->mPoints[i].mX, h->mPoints[i].mY );
   }
   cairo_close_path( ctx );
   cairo_stroke( ctx );
 }
 
-void drawExplosion( cairo_t *ctx, const Point* p, float ls, bool grayscale ) {
+static void drawExplosion( cairo_t *ctx, const Vector* p, float ls, bool grayscale ) {
   int radius, angle, ofs;
   /* cairo_set_line_width( ctx, 1.4 ); */
   cairo_set_line_width( ctx, ls );
@@ -131,7 +129,7 @@ void drawExplosion( cairo_t *ctx, const Point* p, float ls, bool grayscale ) {
         cairo_set_source_rgb( ctx, 1,0,0 );
     }
     for (angle=0; angle<360; angle += 30 ) {
-      cairo_arc( ctx, p->x, p->y, radius, deg2rad(angle+ofs),deg2rad(angle+ofs+10));
+      cairo_arc( ctx, p->mX, p->mY, radius, deg2rad(angle+ofs),deg2rad(angle+ofs+10));
       cairo_stroke( ctx );
     }
   }
@@ -139,11 +137,11 @@ void drawExplosion( cairo_t *ctx, const Point* p, float ls, bool grayscale ) {
     cairo_set_source_rgb( ctx, .75, .75, .75 );
   else
     cairo_set_source_rgb( ctx, 1,1,0);
-  cairo_arc(ctx, p->x, p->y, 7, 0, M_PI*2);
+  cairo_arc(ctx, p->mX, p->mY, 7, 0, M_PI*2);
   cairo_stroke( ctx );
 }
 
-void centeredText(cairo_t *ctx, char *text, int x, int y) {
+static void centeredText(cairo_t *ctx, char *text, int x, int y) {
   cairo_text_extents_t extents;
   cairo_text_extents(ctx, text, &extents);
 
@@ -157,9 +155,9 @@ void centeredText(cairo_t *ctx, char *text, int x, int y) {
   cairo_show_text(ctx, text);
 }
 
-void drawScore( cairo_t *ctx, int pnts, float ls, bool grayscale) {
-  int score_y = 210;
-  double start = 210;
+static void drawScore( cairo_t *ctx, int pnts, float ls, bool grayscale) {
+  int score_y = 290;
+  double start = 355;
 
   cairo_select_font_face(ctx, "monospace", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
 
@@ -171,7 +169,7 @@ void drawScore( cairo_t *ctx, int pnts, float ls, bool grayscale) {
   centeredText(ctx, text, start, score_y-193);
 }
 
-void drawKeyState( cairo_t *ctx, float ls, bool left, bool right, bool thrust, bool fire, bool grayscale) {
+static void drawKeyState( cairo_t *ctx, float ls, bool left, bool right, bool thrust, bool fire, bool grayscale) {
   int score_y = 210;
   double start = 210;
 
@@ -203,9 +201,11 @@ void drawKeyState( cairo_t *ctx, float ls, bool left, bool right, bool thrust, b
   cairo_fill(ctx);
 }
 
-void drawVlner( cairo_t *ctx, int vlner, bool kill, float ls, bool grayscale) {
-  int score_y = 210;
-  double start = 210;
+static void drawVlner( cairo_t *ctx, int vlner, bool kill, float ls, bool grayscale) {
+  // int score_y = 210;
+  // double start = 210;
+  int score_y = 315+20;
+  double start = 355;
 
   cairo_set_line_width( ctx, ls-1 );
 
@@ -221,47 +221,47 @@ void drawVlner( cairo_t *ctx, int vlner, bool kill, float ls, bool grayscale) {
   cairo_fill(ctx);
 }
 
-void drawJustGameStuff( cairo_t *ctx, Game *g, float ls ) {
+static void drawJustGameStuff( cairo_t *ctx, Game *g, float ls, bool grayscale ) {
   int i;
 
-  drawHexagon( ctx, &g->bigHex, g->grayscale ? 1 : -1 );
-  drawHexagon( ctx, &g->smallHex, g->grayscale ? 1 : -1 );
+  drawHexagon( ctx, &g->mBighex, grayscale ? 1 : -1 );
+  drawHexagon( ctx, &g->mSmallhex, grayscale ? 1 : -1 );
 
-  if( g->ship.o.alive ) {
-    drawWireFrame( ctx, &shipWireFrame, &g->ship.o.position, g->ship.o.angle, g->grayscale ? 1 : -1 );
+  if( g->mShip.mAlive ) {
+    drawWireFrame( ctx, &shipWireFrame, &g->mShip.mPos, g->mShip.mAngle, grayscale ? 1 : -1 );
   } else {
-    drawExplosion( ctx, &g->ship.o.position, ls, g->grayscale);
+    drawExplosion( ctx, &g->mShip.mPos, ls, grayscale);
   }
-  if( g->fortress.o.alive ) {
-    drawWireFrame( ctx, &fortressWireFrame, &g->fortress.o.position, g->fortress.o.angle, g->grayscale ? 1 : -1 );
+  if( g->mFortress.mAlive ) {
+    drawWireFrame( ctx, &fortressWireFrame, &g->mFortress.mPos, g->mFortress.mAngle, grayscale ? 1 : -1 );
   } else {
-    drawExplosion( ctx, &g->fortress.o.position, ls, g->grayscale);
+    drawExplosion( ctx, &g->mFortress.mPos, ls, grayscale);
   }
   for (i=0; i<MAX_MISSILES; i++) {
-    if (g->missiles[i].o.alive) {
-      drawWireFrame(ctx, &missileWireFrame, &g->missiles[i].o.position, g->missiles[i].o.angle, g->grayscale ? 1 : -1 );
+    if (g->mMissiles[i].mAlive) {
+      drawWireFrame(ctx, &missileWireFrame, &g->mMissiles[i].mPos, g->mMissiles[i].mAngle, grayscale ? 1 : -1 );
     }
   }
   for (i=0; i<MAX_SHELLS; i++) {
-    double d = sqrt(pow(g->shells[i].o.position.x - g->fortress.o.position.x, 2) + pow(g->shells[i].o.position.y - g->fortress.o.position.y, 2));
-    if (g->shells[i].o.alive && d > 21) {
-      drawWireFrame(ctx, &shellWireFrame, &g->shells[i].o.position, g->shells[i].o.angle, g->grayscale ? 1 : -1 );
+    double d = sqrt(pow(g->mShells[i].mPos.mX - g->mFortress.mPos.mX, 2) + pow(g->mShells[i].mPos.mY - g->mFortress.mPos.mY, 2));
+    if (g->mShells[i].mAlive && d > 21) {
+      drawWireFrame(ctx, &shellWireFrame, &g->mShells[i].mPos, g->mShells[i].mAngle, grayscale ? 1 : -1 );
     }
   }
 }
 
-void drawGameStateScaled( Game *g, cairo_surface_t *surface, float scale, float ls) {
+void drawGameStateScaled( Game *g, cairo_surface_t *surface, float scale, float line_width, bool grayscale) {
   cairo_t *ctx = cairo_create( surface );
   if ( scale < 1 )
     cairo_scale( ctx, scale, scale );
 
-  cairo_set_line_width( ctx, ls );
+  cairo_set_line_width( ctx, line_width );
   cairo_set_source_rgb( ctx, 0, 0, 0 );
   cairo_paint( ctx );
 
-  drawJustGameStuff( ctx, g, ls );
-  // drawKeyState( ctx, ls, g->keys.left, g->keys.right, g->keys.thrust, g->keys.fire, g->grayscale);
-  drawScore( ctx, g->score.points, ls, g->grayscale);
-  drawVlner( ctx, g->score.vulnerability, (g->score.vulnerability > 10) && (g->fortress.vulnerabilityTimer < g->config.fortress.vulnerabilityTime), ls, g->grayscale);
+  drawJustGameStuff( ctx, g, line_width, grayscale );
+  // drawKeyState( ctx, ls, g->keys.left, g->keys.right, g->keys.thrust, g->keys.fire, grayscale);
+  drawScore( ctx, g->mScore.mPoints, line_width, grayscale);
+  drawVlner( ctx, g->mScore.mVulnerability, (g->mScore.mVulnerability > 10) && (g->mFortress.mVulnerabilityTimer < g->mConfig->getInt("fortressVulnerabilityTime")), line_width, grayscale);
   cairo_destroy( ctx );
 }

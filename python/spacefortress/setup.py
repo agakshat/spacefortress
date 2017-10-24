@@ -14,10 +14,14 @@ deps.update({
     ]
 })
 
-sources = [os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../../src/%s" % f)) for f in ["ssf.c","ssf_cairo.c"]]
-headers = [os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../../src/%s" % f)) for f in ["ssf.h","ssf_cairo.h"]]
+sources = [os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../../src/%s" % f)) for f in ["config.cpp","configs.cpp","vector.cpp","object.cpp","hexagon.cpp","game.cpp","pymodule.cpp","wireframe.cpp","draw.cpp"]]
+headers = [os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),"../../src/%s" % f)) for f in ["config.hh","configs.hh","vector.hh","object.hh","hexagon.hh","game.hh","wireframe.hh","draw.hh"]]
 
-extension_mod = Extension("spacefortress/libssfcairo", sources, **deps)
+if 'extra_compile_args' not in deps:
+    deps['extra_compile_args'] = []
+deps['extra_compile_args'].append("-std=c++11")
+
+extension_mod = Extension("spacefortress/_spacefortress", sources, **deps)
 
 descr_file = os.path.join(os.path.dirname(__file__), 'README.rst')
 

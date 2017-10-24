@@ -82,7 +82,6 @@ class SSF_Env(gym.Env):
             #     ])
             # else:
             self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
-            self.g = sf.makeExplodeGame(grayscale=True)
         elif self.gametype == "autoturn":
             # if action_set == 1:
             #     self.action_combinations = np.array([
@@ -99,7 +98,6 @@ class SSF_Env(gym.Env):
             #     ])
             # else:
             self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
-            self.g = sf.makeAutoTurnGame(grayscale=True)
         if self.continuous:
             if self.gametype == "explode":
                 # Action is 3 floats [fire, thrust, turn].
@@ -114,15 +112,10 @@ class SSF_Env(gym.Env):
                 self.action_space = spaces.Box(-1, +1, (2,))
         else:
             self.action_space = spaces.Discrete(len(self.action_combinations))
-
-        if self.gametype == "explode":
-            self.g = sf.makeExplodeGame(grayscale=True)
-        elif self.gametype == "autoturn":
-            self.g = sf.makeAutoTurnGame(grayscale=True)
-        self.w = int(np.ceil(self.g.contents.config.width * self.scale))
-        self.h = int(np.ceil(self.g.contents.config.height * self.scale))
-        self.pb = sf.newPixelBuffer(self.g, self.w, self.h)
-        self.raw_pixels = sf.get_pixel_buffer_data(self.pb)
+        self.g = sf.Game(self.gametype, self.scale, self.ls, True)
+        self.w = self.g.pb_width
+        self.h = self.g.pb_height
+        self.raw_pixels = self.g.pb_pixels
 
         self.MAX_SCORE = int(((self.g.contents.config.gameTime/1000) / (.250 * 11 + 1)) * (100-2*12))
 
@@ -134,20 +127,20 @@ class SSF_Env(gym.Env):
     def _get_features(self):
         return np.clip(np.array([
             1 if self.g.contents.ship.o.alive else 0,
-            self.g.contents.ship.o.position.x / self.g.contents.config.width,
-            self.g.contents.ship.o.position.y / self.g.contents.config.height,
-            self.g.contents.ship.o.velocity.x / 10,
-            self.g.contents.ship.o.velocity.y / 10,
-            self.g.contents.ship.o.angle / 360,
+            self.g.ship_x / self.g.contents.config.width,
+            self.g.ship_y / self.g.contents.config.height,
+            self.g.ship_vx / 10,
+            self.g.ship_vy / 10,
+            self.g.angle / 360,
             self.g.contents.ship.vdir % 360 / 360,
             self.g.contents.ship.ndist,
-            1 if self.g.contents.fortress.o.alive else 0,
-            self.g.contents.fortress.o.angle / 360,
-            max(self.g.contents.score.vulnerability, 10) / 10,
-            1 if self.g.contents.score.vulnerability > 10 and self.g.contents.fortress.vulnerabilityTimer < self.g.contents.config.fortress.vulnerabilityTime else 0,
-            len([m for m in self.g.contents.missiles if m.o.alive]) / sf.MAX_MISSILES,
-            len([m for m in self.g.contents.shells if m.o.alive]) / sf.MAX_SHELLS,
-            self.g.contents.score.points / self.MAX_SCORE
+            1 if self.g.fortress_alive else 0,
+            self.g.fortress_angle / 360,
+            max(self.g.vulnerability, 10) / 10,
+            1 if self.g.vulnerability > 10 and self.g.contents.fortress.vulnerabilityTimer < self.g.contents.config.fortress.vulnerabilityTime else 0,
+            len(self.g.missiles) / sf.MAX_MISSILES,
+            len(self.g.shells) / sf.MAX_SHELLS,
+            self.g.points / self.MAX_SCORE
             ]), -1, 1)
 
     def _seed(self, seed=None):

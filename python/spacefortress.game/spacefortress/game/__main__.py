@@ -12,7 +12,7 @@ def main(args=None):
     parser.add_argument('--game', choices=["explode","autoturn"], default="explode", nargs=1)
     parser.add_argument('--video', type=str, default=None)
     args = parser.parse_args(args)
-    args.game = args.game[0]
+    args.game = args.game
 
     game = SSF_Game(args)
     game.run()

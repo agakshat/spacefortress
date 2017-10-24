@@ -12,12 +12,9 @@ class SSF_Game(pyglet.app.EventLoop):
 
     def __init__(self, args):
         super(SSF_Game, self).__init__()
-        if args.game == "explode":
-            self.g = sf.makeExplodeGame(grayscale=False)
-        elif args.game == "autoturn":
-            self.g = sf.makeAutoTurnGame(grayscale=False)
-        self.w = self.g.contents.config.width
-        self.h = self.g.contents.config.height
+        self.g = sf.Game(args.game, 1, 2, False)
+        self.w = self.g.pb_width
+        self.h = self.g.pb_height
 
         if args.video:
             self.encoder = ImageEncoder(args.video, (self.h, self.w, 4), self.FPS)
@@ -41,14 +38,13 @@ class SSF_Game(pyglet.app.EventLoop):
         self.thrust = False
         self.turn = 0
 
-        self.pb = sf.newPixelBuffer(self.g, self.w, self.h)
-        self.raw_pixels = sf.get_pixel_buffer_data(self.pb)
+        self.raw_pixels = self.g.pb_pixels
         self.draw()
 
         pyglet.clock.schedule_interval(self.update, 1/self.FPS)
 
     def draw(self):
-        sf.drawGameStateScaled(self.g, self.pb, 1, 2)
+        self.g.draw()
         self.game_state = np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4)
         if self.encoder:
             self.encoder.capture_frame(self.game_state)
@@ -61,25 +57,25 @@ class SSF_Game(pyglet.app.EventLoop):
 
     def on_key_press(self, symbol, modifiers):
         if symbol == key.SPACE:
-            sf.pressKey(self.g, sf.FIRE_KEY)
+            self.g.press_key(sf.FIRE_KEY)
         elif symbol == key.W:
-            sf.pressKey(self.g, sf.THRUST_KEY)
+            self.g.press_key(sf.THRUST_KEY)
         elif symbol == key.A:
-            sf.pressKey(self.g, sf.LEFT_KEY)
+            self.g.press_key(sf.LEFT_KEY)
         elif symbol == key.D:
-            sf.pressKey(self.g, sf.RIGHT_KEY)
+            self.g.press_key(sf.RIGHT_KEY)
         elif symbol == key.ESCAPE:
             self.cleanup()
 
     def on_key_release(self, symbol, modifiers):
         if symbol == key.SPACE:
-            sf.releaseKey(self.g, sf.FIRE_KEY)
+            self.g.release_key(sf.FIRE_KEY)
         elif symbol == key.W:
-            sf.releaseKey(self.g, sf.THRUST_KEY)
+            self.g.release_key(sf.THRUST_KEY)
         elif symbol == key.A:
-            sf.releaseKey(self.g, sf.LEFT_KEY)
+            self.g.release_key(sf.LEFT_KEY)
         elif symbol == key.D:
-            sf.releaseKey(self.g, sf.RIGHT_KEY)
+            self.g.release_key(sf.RIGHT_KEY)
 
     def on_close(self):
         self.cleanup()
@@ -90,7 +86,7 @@ class SSF_Game(pyglet.app.EventLoop):
         self.exit()
 
     def update(self, dt):
-        sf.stepOneTick(self.g, int(np.round(dt*1000)))
+        self.g.step_one_tick(int(np.round(dt*1000)))
         self.draw()
-        if sf.isGameOver(self.g):
+        if self.g.is_game_over():
             self.cleanup()

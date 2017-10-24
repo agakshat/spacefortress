@@ -16,7 +16,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.game = args.game[0]
 
-    env_name = 'SpaceFortress-{}-{}-v0'.format(args.gametype, args.obstype)
+    env_name = 'SpaceFortress-{}-{}-v0'.format(args.game, args.obstype)
     env = gym.make(env_name)
     tmp_dir = tempfile.mkdtemp(prefix='{}-'.format(env_name))
     print(tmp_dir)
