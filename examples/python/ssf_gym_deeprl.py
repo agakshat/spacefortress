@@ -23,7 +23,7 @@ from rl.callbacks import FileLogger, ModelIntervalCheckpoint
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)),"../"))
 
-import spacefortress as sf
+import spacefortress.core as sf
 import spacefortress.gym
 
 import cv2

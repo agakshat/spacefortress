@@ -3,7 +3,7 @@ import argparse
 import math
 import numpy as np
 
-import spacefortress as sf
+import spacefortress.core as sf
 from spacefortress.util import ImageEncoder
 
 FPS = 30

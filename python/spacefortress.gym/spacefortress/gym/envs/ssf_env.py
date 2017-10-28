@@ -13,7 +13,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import cv2
-import spacefortress as sf
+import spacefortress.core as sf
 
 class SSF_Viewer(object):
     def __init__(self, display=None):
@@ -112,17 +112,10 @@ class SSF_Env(gym.Env):
                 self.action_space = spaces.Box(-1, +1, (2,))
         else:
             self.action_space = spaces.Discrete(len(self.action_combinations))
-        self.g = sf.Game(self.gametype, self.scale, self.ls, True)
-        self.w = self.g.pb_width
-        self.h = self.g.pb_height
-        self.raw_pixels = self.g.pb_pixels
 
-        self.MAX_SCORE = int(((self.g.contents.config.gameTime/1000) / (.250 * 11 + 1)) * (100-2*12))
+        self.MAX_SCORE = 3748
 
-        if self.obs_type == 'image':
-            self.observation_space = spaces.Box(low=0, high=255, shape=(self.h, self.w, 3))
-        elif self.obs_type == 'features':
-            self.observation_space = spaces.Box(low=-1, high=1, shape=self._get_features().shape)
+        self._reset()
 
     def _get_features(self):
         return np.clip(np.array([
@@ -148,13 +141,18 @@ class SSF_Env(gym.Env):
         return [seed]
 
     def _reset(self):
-        sf.initGame(self.g)
-        sf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
+        self.g = sf.Game(self.gametype, self.scale, self.ls, True)
+        self.w = self.g.pb_width
+        self.h = self.g.pb_height
+        self.raw_pixels = self.g.pb_pixels
+        self.g.draw()
         if self.obs_type == 'image':
+            self.observation_space = spaces.Box(low=0, high=255, shape=(self.g.pb_height, self.g.pb_width, 3))
             self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
             self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
             return self.game_state
-        else:
+        elif self.obs_type == 'features':
+            self.observation_space = spaces.Box(low=-1, high=1, shape=self._get_features().shape)
             self.game_state = np.array([])
             return self._get_features()
 
@@ -169,7 +167,7 @@ class SSF_Env(gym.Env):
             self.viewer = SSF_Viewer()
 
         if self.obs_type == 'features' and self.game_state.shape == (0,):
-            sf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
+            self.g.draw()
             self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
             self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
 
@@ -182,7 +180,7 @@ class SSF_Env(gym.Env):
         pass
 
     def _draw(self):
-        sf.drawGameStateScaled(self.g, self.pb, self.scale, self.ls)
+        self.g.draw()
         self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
         self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
 
@@ -191,49 +189,49 @@ class SSF_Env(gym.Env):
         reward = 0
         if self.continuous:
             if action[0] > 0:
-                sf.pressKey(self.g, sf.FIRE_KEY)
+                self.g.press_key(sf.FIRE_KEY)
             else:
-                sf.releaseKey(self.g, sf.FIRE_KEY)
+                self.g.release_key(sf.FIRE_KEY)
             if action[1] > 0:
-                sf.pressKey(self.g, sf.THRUST_KEY)
+                self.g.press_key(sf.THRUST_KEY)
             else:
-                sf.releaseKey(self.g, sf.THRUST_KEY)
+                self.g.release_key(sf.THRUST_KEY)
             if self.gametype == "explode":
                 if action[2] < -0.5:
                     if self.last_action != None and self.last_action > 0.5:
-                        sf.releaseKey(self.g, sf.RIGHT_KEY)
-                    sf.pressKey(self.g, sf.LEFT_KEY)
+                        self.g.release_key(sf.RIGHT_KEY)
+                    self.g.press_key(sf.LEFT_KEY)
                 elif action[2] > 0.5:
                     if self.last_action != None and self.last_action < -0.5:
-                        sf.releaseKey(self.g, sf.LEFT_KEY)
-                    sf.pressKey(self.g, sf.RIGHT_KEY)
+                        self.g.release_key(sf.LEFT_KEY)
+                    self.g.press_key(sf.RIGHT_KEY)
                 else:
                     if self.last_action != None and self.last_action < -0.5:
-                        sf.releaseKey(self.g, sf.LEFT_KEY)
+                        self.g.release_key(sf.LEFT_KEY)
                     elif self.last_action != None and self.last_action > 0.5:
-                        sf.releaseKey(self.g, sf.RIGHT_KEY)
+                        self.g.release_key(sf.RIGHT_KEY)
         else:
             keystate = self.action_combinations[action]
             if keystate[0]:
-                sf.pressKey(self.g, sf.FIRE_KEY)
+                self.g.press_key(sf.FIRE_KEY)
             else:
-                sf.releaseKey(self.g, sf.FIRE_KEY)
+                self.g.release_key(sf.FIRE_KEY)
             if keystate[1]:
-                sf.pressKey(self.g, sf.THRUST_KEY)
+                self.g.press_key(sf.THRUST_KEY)
             else:
-                sf.releaseKey(self.g, sf.THRUST_KEY)
+                self.g.release_key(sf.THRUST_KEY)
             if self.gametype == "explode":
                 if keystate[2]:
-                    sf.pressKey(self.g, sf.LEFT_KEY)
+                    self.g.press_key(sf.LEFT_KEY)
                 else:
-                    sf.releaseKey(self.g, sf.LEFT_KEY)
+                    self.g.release_key(sf.LEFT_KEY)
                 if keystate[3]:
-                    sf.pressKey(self.g, sf.RIGHT_KEY)
+                    self.g.press_key(sf.RIGHT_KEY)
                 else:
-                    sf.releaseKey(self.g, sf.RIGHT_KEY)
-        sf.stepOneTick(self.g, self.tickdur)
-        reward = self.g.contents.reward
-        done = sf.isGameOver(self.g)
+                    self.g.release_key(sf.RIGHT_KEY)
+
+        reward = self.g.step_one_tick(self.tickdur)
+        done = self.g.is_game_over()
         self.last_action = action
         if self.obs_type == 'image':
             self._draw()

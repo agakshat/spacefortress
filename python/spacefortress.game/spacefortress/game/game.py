@@ -3,7 +3,7 @@ import pyglet
 from pyglet.window import key
 import numpy as np
 
-import spacefortress as sf
+import spacefortress.core as sf
 from spacefortress.util import ImageEncoder
 
 class SSF_Game(pyglet.app.EventLoop):

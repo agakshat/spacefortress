@@ -122,9 +122,7 @@ stepOneTick(PySpaceFortressGameObject *self, PyObject *args)
   if (!PyArg_ParseTuple(args, "i", &ms))
     return NULL;
 
-  self->game->stepOneTick( ms );
-
-  Py_RETURN_NONE;
+  return Py_BuildValue("i", self->game->stepOneTick( ms ));
 }
 
 static PyObject *

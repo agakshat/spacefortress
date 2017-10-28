@@ -81,6 +81,7 @@ public:
   GameScore mScore;
   int mBonus;
   int mDestroyFortressExtraPoints;
+  int mReward;
 
   Game( Config *config );
   virtual ~Game();
@@ -111,7 +112,7 @@ public:
   void resetEvents();
   void resetTick();
   void updateTime(int ms);
-  void stepOneTick(int ms);
+  int stepOneTick(int ms);
   bool isGameOver();
   void maybeAdjustHexSizes(int &bigHex, int &smallHex);
   void calculateBonus();

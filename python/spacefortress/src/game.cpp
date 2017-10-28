@@ -43,6 +43,7 @@ Game::Game( Config *config ) {
   mScore.mVulnerability = 0;
   mBonus = 0;
   mDestroyFortressExtraPoints = 0;
+  mReward = 0;
 
   mStats.shipDeaths = 0;
 
@@ -71,6 +72,7 @@ void Game::maybeResetKeyEvents() {
 }
 
 void Game::reward(int amount) {
+  mReward += amount;
   mScore.mRawPoints += amount;
   mScore.mPoints += amount;
   if( mScore.mPoints < 0 ) mScore.mPoints = 0;
@@ -358,7 +360,8 @@ void Game::updateTime(int ms) {
   mTime += ms;
 }
 
-void Game::stepOneTick(int ms) {
+int Game::stepOneTick(int ms) {
+  mReward = 0;
   updateTime(ms);
   resetTick();
   processKeyState();
@@ -368,6 +371,7 @@ void Game::stepOneTick(int ms) {
   updateShells();
   updateMissiles();
   stepTimers(ms);
+  return mReward;
 }
 
 bool Game::isGameOver() {
