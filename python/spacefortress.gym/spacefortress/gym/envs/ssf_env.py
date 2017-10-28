@@ -48,7 +48,7 @@ class SSF_Env(gym.Env):
     }
 
     def __init__(self, gametype="explode", scale=.2, ls=3, action_set=0, continuous=False, obs_type='image'):
-        assert obs_type in ('image', 'features')
+        assert obs_type in ('image', 'features', 'normalized_features')
         self.obs_type = obs_type
         self._seed()
         self.continuous = continuous
@@ -118,23 +118,42 @@ class SSF_Env(gym.Env):
         self._reset()
 
     def _get_features(self):
-        return np.clip(np.array([
-            1 if self.g.contents.ship.o.alive else 0,
-            self.g.ship_x / self.g.contents.config.width,
-            self.g.ship_y / self.g.contents.config.height,
-            self.g.ship_vx / 10,
-            self.g.ship_vy / 10,
-            self.g.angle / 360,
-            self.g.contents.ship.vdir % 360 / 360,
-            self.g.contents.ship.ndist,
-            1 if self.g.fortress_alive else 0,
-            self.g.fortress_angle / 360,
-            max(self.g.vulnerability, 10) / 10,
-            1 if self.g.vulnerability > 10 and self.g.contents.fortress.vulnerabilityTimer < self.g.contents.config.fortress.vulnerabilityTime else 0,
-            len(self.g.missiles) / sf.MAX_MISSILES,
-            len(self.g.shells) / sf.MAX_SHELLS,
-            self.g.points / self.MAX_SCORE
-            ]), -1, 1)
+        if self.obs_type == 'normalized_features':
+            return np.clip(np.array([
+                1 if self.g.ship_alive else 0,
+                self.g.ship_x / self.g.pb_width,
+                self.g.ship_y / self.g.pb_height,
+                self.g.ship_vx / 10,
+                self.g.ship_vy / 10,
+                self.g.ship_angle / 360,
+                self.g.vdir % 360 / 360,
+                self.g.ndist,
+                1 if self.g.fortress_alive else 0,
+                self.g.fortress_angle / 360,
+                max(self.g.vulnerability, 10) / 10,
+                1 if self.g.vulnerability > 10 and self.g.vulnerability_timer < self.g.vulnerability_time else 0,
+                len(self.g.missiles) / sf.MAX_MISSILES,
+                len(self.g.shells) / sf.MAX_SHELLS,
+                self.g.points / self.MAX_SCORE
+                ]), -1, 1)
+        else:
+            return np.array([
+                self.g.ship_alive,
+                self.g.ship_x,
+                self.g.ship_y,
+                self.g.ship_vx,
+                self.g.ship_vy,
+                self.g.ship_angle,
+                self.g.vdir,
+                self.g.ndist,
+                self.g.fortress_alive,
+                self.g.fortress_angle,
+                self.g.vulnerability,
+                1 if self.g.vulnerability > 10 and self.g.vulnerability_timer < self.g.vulnerability_time else 0,
+                len(self.g.missiles),
+                len(self.g.shells),
+                self.g.points
+                ])
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -151,7 +170,7 @@ class SSF_Env(gym.Env):
             self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
             self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
             return self.game_state
-        elif self.obs_type == 'features':
+        else:
             self.observation_space = spaces.Box(low=-1, high=1, shape=self._get_features().shape)
             self.game_state = np.array([])
             return self._get_features()
@@ -166,7 +185,7 @@ class SSF_Env(gym.Env):
         if self.viewer is None:
             self.viewer = SSF_Viewer()
 
-        if self.obs_type == 'features' and self.game_state.shape == (0,):
+        if self.obs_type != 'image' and self.game_state.shape == (0,):
             self.g.draw()
             self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
             self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)

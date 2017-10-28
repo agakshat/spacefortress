@@ -29,7 +29,7 @@ import spacefortress.gym
 import cv2
 import numpy as np
 
-INPUT_SHAPE = (84, 84)
+INPUT_SHAPE = (126, 142)
 WINDOW_LENGTH = 4
 
 FRAMESKIP = 2

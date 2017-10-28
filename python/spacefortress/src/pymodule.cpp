@@ -31,6 +31,8 @@ DEFGET(smallhex, "i", self->game->mSmallhex.mRadius);
 DEFGET(points, "i", self->game->mScore.mPoints);
 DEFGET(raw_points, "i", self->game->mScore.mRawPoints);
 DEFGET(vulnerability, "i", self->game->mScore.mVulnerability);
+DEFGET(vulnerability_timer, "d", self->game->mFortress.mVulnerabilityTimer);
+DEFGET(vulnerability_time, "d", self->game->mConfig->getInt("fortressVulnerabilityTime"));
 DEFGET(thrust_flag, "N", PyBool_FromLong(self->game->mShip.mThrustFlag));
 DEFGET(turn_flag, "i", self->game->mShip.mTurnFlag);
 
@@ -272,6 +274,8 @@ static PyGetSetDef PySpaceFortressGame_getset[] = {
   {(char*)"points", (getter)get_points, NULL, NULL, NULL},
   {(char*)"raw_points", (getter)get_raw_points, NULL, NULL, NULL},
   {(char*)"vulnerability", (getter)get_vulnerability, NULL, NULL, NULL},
+  {(char*)"vulnerability_time", (getter)get_vulnerability_time, NULL, NULL, NULL},
+  {(char*)"vulnerability_timer", (getter)get_vulnerability_timer, NULL, NULL, NULL},
   {(char*)"thrust_flag", (getter)get_thrust_flag, NULL, NULL, NULL},
   {(char*)"turn_flag", (getter)get_turn_flag, NULL, NULL, NULL},
   {(char*)"events", (getter)get_events, NULL, NULL, NULL},
@@ -340,6 +344,9 @@ static void add_to_module(PyObject *m) {
   PyModule_AddObject(m, "RIGHT_KEY", Py_BuildValue( "i", RIGHT_KEY ));
   PyModule_AddObject(m, "THRUST_KEY", Py_BuildValue( "i", THRUST_KEY ));
   PyModule_AddObject(m, "FIRE_KEY", Py_BuildValue( "i", FIRE_KEY ));
+
+  PyModule_AddObject(m, "MAX_MISSILES", Py_BuildValue( "i", MAX_MISSILES ));
+  PyModule_AddObject(m, "MAX_SHELLS", Py_BuildValue( "i", MAX_SHELLS ));
 }
 
 #if PY_MAJOR_VERSION == 2
