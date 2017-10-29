@@ -7,6 +7,7 @@ void baseConfig(Config *c) {
   c->set("destroyFortress", 100);
   c->set("shipDeathPenalty", 100);
   c->set("missilePenalty", 2);
+  c->set("incReward", 10);
 
   c->set("maxPoints", 3000);
   c->set("maxBonus", 90);

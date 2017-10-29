@@ -152,7 +152,6 @@ void Game::fireMissile( const Vector &p, double angle ) {
         mMissiles[i].mVel.mX = mConfig->getInt("missileSpeed") * cos(deg2rad(angle));
         mMissiles[i].mVel.mY = mConfig->getInt("missileSpeed") * sin(deg2rad(angle));
         addEvent( "missile-fired" );
-        penalize( mConfig->getInt( "missilePenalty" ));
         return;
       }
     }
@@ -288,6 +287,8 @@ void Game::updateMissiles() {
           addEvent("hit-fortress");
           if (mFortress.mVulnerabilityTimer >= mConfig->getInt("fortressVulnerabilityTime")) {
             playSound( VLNER_INCREASE_SOUND );
+            if (mScore.mVulnerability < 10)
+              reward( mConfig->getInt("incReward") );
             mScore.mVulnerability += 1;
             addEvent("vlner-increased");
           } else {
@@ -309,6 +310,7 @@ void Game::updateMissiles() {
         }
       } else if (isOutsideGameArea(mMissiles[i].mPos)) {
         mMissiles[i].mAlive = false;
+        penalize( mConfig->getInt( "missilePenalty" ));
       }
     }
   }
