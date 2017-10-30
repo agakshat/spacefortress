@@ -1,5 +1,6 @@
 #include "space-fortress.hh"
 #include <Python.h>
+#include "PythonHelper.h"
 
 typedef struct {
   PyObject_HEAD
@@ -146,7 +147,7 @@ draw(PySpaceFortressGameObject *self, PyObject *args) {
 static PyObject *
 get_pixels(PySpaceFortressGameObject *self) {
   PyObject *buf;
-  buf = PyBuffer_FromMemory( self->buffer->raw, self->buffer->height * self->buffer->stride );
+  buf = PyBuffer_FromMemory( (char *)self->buffer->raw, self->buffer->height * self->buffer->stride );
   return Py_BuildValue("O", buf);
 }
 
@@ -373,7 +374,7 @@ static struct PyModuleDef SpaceFortressModule = {
   NULL, NULL, NULL, NULL
 };
 
-PYMODINIT_FUNC
+PyMODINIT_FUNC
 PyInit__spacefortress ()
 {
   PyObject *m = PyModule_Create(&SpaceFortressModule);
