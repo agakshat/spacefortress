@@ -12,7 +12,7 @@ class SSF_Game(pyglet.app.EventLoop):
 
     def __init__(self, args):
         super(SSF_Game, self).__init__()
-        self.g = sf.Game(args.game, 1, 2, False)
+        self.g = sf.Game(args.game, viewport=(130,80,450,460), lw=2, grayscale=False)
         self.w = self.g.pb_width
         self.h = self.g.pb_height
 

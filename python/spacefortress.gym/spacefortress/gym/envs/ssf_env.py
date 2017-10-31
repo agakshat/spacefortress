@@ -47,7 +47,7 @@ class SSF_Env(gym.Env):
         'video.frames_per_second' : 30
     }
 
-    def __init__(self, gametype="explode", scale=.2, ls=3, action_set=0, continuous=False, obs_type='image'):
+    def __init__(self, gametype="explode", scale=.2, viewport=(130,80,450,460), ls=3, action_set=0, continuous=False, obs_type='image'):
         assert obs_type in ('image', 'features', 'normalized_features')
         self.obs_type = obs_type
         self._seed()
@@ -55,7 +55,9 @@ class SSF_Env(gym.Env):
         self.viewer = None
         self.last_action = None
         self.gametype = gametype
-        self.scale = scale
+        self.w = int(viewport[2] * scale)
+        self.h = int(viewport[3] * scale)
+        self.viewport = viewport
         self.ls = ls
         self.tickdur = int(np.ceil(1./self.metadata['video.frames_per_second']*1000))
 
@@ -160,9 +162,7 @@ class SSF_Env(gym.Env):
         return [seed]
 
     def _reset(self):
-        self.g = sf.Game(self.gametype, self.scale, self.ls, True)
-        self.w = self.g.pb_width
-        self.h = self.g.pb_height
+        self.g = sf.Game(self.gametype, width=self.w, height=self.h, viewport=self.viewport, lw=self.ls, grayscale=True)
         self.raw_pixels = self.g.pb_pixels
         self.g.draw()
         if self.obs_type == 'image':

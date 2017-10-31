@@ -30,7 +30,16 @@ def play_like_an_idiot(g, last_key, keys):
 if __name__ == "__main__":
     args = parse_args()
     print(args.game)
-    g = sf.Game(args.game, args.scale, args.linesize, args.grayscale )
+    vp_w = 450
+    vp_h = 460
+    w = int(vp_w * args.scale)
+    h = int(vp_h * args.scale)
+    # x264 video requires even width & height
+    if w % 2 != 0:
+        w += 1
+    if h % 2 != 0:
+        h += 1
+    g = sf.Game(args.game, width=w, height=h, viewport=(130,80,vp_w,vp_h), lw=args.linesize, grayscale=args.grayscale )
     if args.game == "explode":
         keys = [sf.FIRE_KEY, sf.THRUST_KEY, sf.LEFT_KEY, sf.RIGHT_KEY]
     elif args.game == "autoturn":
