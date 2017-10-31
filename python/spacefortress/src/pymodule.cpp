@@ -185,6 +185,11 @@ get_config_value(PySpaceFortressGameObject *self, PyObject *args) {
   }
 }
 
+static PyObject *
+dumpState(PySpaceFortressGameObject *self, PyObject *args) {
+  return Py_BuildValue("s", self->game->dumpState().c_str());
+}
+
 static void
 PySpaceFortressGame_delete(PySpaceFortressGameObject *self)
 {
@@ -258,6 +263,7 @@ static PyMethodDef PySpaceFortressGame_methods[] = {
   {"is_game_over", (PyCFunction)isGameOver, METH_NOARGS, NULL},
   {"draw", (PyCFunction)draw, METH_NOARGS, NULL},
   {"config", (PyCFunction)get_config_value, METH_VARARGS, NULL},
+  {"dump", (PyCFunction)dumpState, METH_NOARGS, NULL},
   {NULL, NULL, 0, NULL}
 };
 
