@@ -39,21 +39,17 @@ class SSF_Game(pyglet.app.EventLoop):
         self.turn = 0
 
         self.raw_pixels = self.g.pb_pixels
-        self.draw()
 
         pyglet.clock.schedule_interval(self.update, 1/self.FPS)
 
-    def draw(self):
+    def on_draw(self):
         self.g.draw()
         self.game_state = np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4)
         if self.encoder:
             self.encoder.capture_frame(self.game_state)
         image = pyglet.image.ImageData(self.w, self.h, 'BGRA', self.game_state.tobytes(), pitch=self.w * -4)
         self.game_window.clear()
-        self.game_window.switch_to()
-        self.game_window.dispatch_events()
         image.blit(0,0)
-        self.game_window.flip()
 
     def on_key_press(self, symbol, modifiers):
         if symbol == key.SPACE:
@@ -87,6 +83,5 @@ class SSF_Game(pyglet.app.EventLoop):
 
     def update(self, dt):
         self.g.step_one_tick(int(np.round(dt*1000)))
-        self.draw()
         if self.g.is_game_over():
             self.cleanup()
