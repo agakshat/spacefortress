@@ -16,10 +16,10 @@ Fortress::~Fortress() { }
 Game::Game( Config *config ) {
   mConfig = config;
 
-  mKeys.thrust = false;
-  mKeys.left = false;
-  mKeys.right = false;
-  mKeys.fire = false;
+  mKeys.thrust = 0;
+  mKeys.left = 0;
+  mKeys.right = 0;
+  mKeys.fire = 0;
   mKeys.events.clear();
   mKeys.processed = false;
 
@@ -45,7 +45,16 @@ Game::Game( Config *config ) {
   mDestroyFortressExtraPoints = 0;
   mReward = 0;
 
+  mStats.bigHexDeaths = 0;
+  mStats.smallHexDeaths = 0;
+  mStats.shellDeaths = 0;
   mStats.shipDeaths = 0;
+  mStats.resets = 0;
+  mStats.destroyedFortresses = 0;
+  mStats.missedShots = 0;
+  mStats.totalShots = 0;
+  mStats.vlnerIncs = 0;
+  mStats.maxVlner = 0;
 
   mTick = 0;
   mTime = 0;
@@ -152,6 +161,8 @@ void Game::fireMissile( const Vector &p, double angle ) {
         mMissiles[i].mVel.mX = mConfig->getInt("missileSpeed") * cos(deg2rad(angle));
         mMissiles[i].mVel.mY = mConfig->getInt("missileSpeed") * sin(deg2rad(angle));
         addEvent( "missile-fired" );
+        penalize( mConfig->getInt( "missilePenalty" ));
+        mStats.totalShots += 1;
         return;
       }
     }
@@ -191,18 +202,45 @@ void Game::processKeyState() {
     if (mKeys.events[i].state == true) {
       if (mKeys.events[i].sym == LEFT_KEY) {
         mShip.mTurnFlag = TURN_LEFT;
+        if (mKeys.left < 0)
+          mKeys.left = 0;
+        mKeys.left += 1;
       } else if (mKeys.events[i].sym == RIGHT_KEY) {
         mShip.mTurnFlag = TURN_RIGHT;
+        if (mKeys.right < 0)
+          mKeys.right = 0;
+        mKeys.right += 1;
       } else if (mKeys.events[i].sym == THRUST_KEY) {
         mShip.mThrustFlag = true;
+        if (mKeys.thrust < 0)
+          mKeys.thrust = 0;
+        mKeys.thrust += 1;
       } else if (mKeys.events[i].sym == FIRE_KEY) {
         fireMissile(mShip.mPos, mShip.mAngle);
+        if (mKeys.fire < 0)
+          mKeys.fire = 0;
+        mKeys.fire += 1;
       }
     } else {
-      if (mKeys.events[i].sym == LEFT_KEY || mKeys.events[i].sym == RIGHT_KEY) {
+      if (mKeys.events[i].sym == LEFT_KEY) {
         mShip.mTurnFlag = NO_TURN;
+        if (mKeys.left > 0)
+          mKeys.left = 0;
+        mKeys.left -= 1;
+      } else if (mKeys.events[i].sym == RIGHT_KEY) {
+        mShip.mTurnFlag = NO_TURN;
+        if (mKeys.right > 0)
+          mKeys.right = 0;
+        mKeys.right -= 1;
       } else if (mKeys.events[i].sym == THRUST_KEY) {
         mShip.mThrustFlag = false;
+        if (mKeys.thrust > 0)
+          mKeys.thrust = 0;
+        mKeys.thrust -= 1;
+      } else if (mKeys.events[i].sym == FIRE_KEY) {
+        if (mKeys.fire > 0)
+          mKeys.fire = 0;
+        mKeys.fire -= 1;
       }
     }
   }
@@ -264,10 +302,12 @@ void Game::updateShip() {
 
     if (!mBighex.isInside(mShip.mPos)) {
       killShip();
+      mStats.bigHexDeaths += 1;
       mCollisions.bigHex = true;
       addEvent("explode-bighex");
     } else if (mSmallhex.isInside(mShip.mPos)) {
       killShip();
+      mStats.smallHexDeaths += 1;
       mCollisions.smallHex = true;
       addEvent("explode-smallhex");
     }
@@ -291,6 +331,9 @@ void Game::updateMissiles() {
               reward( mConfig->getInt("incReward") );
             mScore.mVulnerability += 1;
             addEvent("vlner-increased");
+            mStats.vlnerIncs += 1;
+            if (mScore.mVulnerability > mStats.maxVlner)
+              mStats.maxVlner = mScore.mVulnerability;
           } else {
             if (mScore.mVulnerability >= mConfig->getInt("fortressVulnerabilityThreshold") + 1) {
               playSound( VLNER_INCREASE_SOUND );
@@ -298,9 +341,12 @@ void Game::updateMissiles() {
               mFortress.mDeathTimer = 0;
               reward( mConfig->getInt("destroyFortress") + mDestroyFortressExtraPoints );
               addEvent("fortress-destroyed");
+              mStats.destroyedFortresses += 1;
             } else {
               playSound( VLNER_RESET_SOUND );
               addEvent("vlner-reset");
+              penalize( mScore.mVulnerability * mConfig->getInt("incReward") );
+              mStats.resets += 1;
             }
             mScore.mVulnerability = 0;
           }
@@ -310,7 +356,8 @@ void Game::updateMissiles() {
         }
       } else if (isOutsideGameArea(mMissiles[i].mPos)) {
         mMissiles[i].mAlive = false;
-        penalize( mConfig->getInt( "missilePenalty" ));
+        penalize( mConfig->getInt( "missPenalty" ));
+        mStats.missedShots += 1;
       }
     }
   }
@@ -326,6 +373,7 @@ void Game::updateShells() {
         mCollisions.shellShip = true;
         mShells[i].mAlive = false;
         killShip();
+        mStats.shellDeaths += 1;
         addEvent("shell-hit-ship");
       } else if (isOutsideGameArea(mShells[i].mPos)) {
         mShells[i].mAlive = false;

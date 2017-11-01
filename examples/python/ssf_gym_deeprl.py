@@ -197,7 +197,7 @@ for e in xrange(args.epochs):
     # if args.policy == "eps" and e % 10 == 0:
     #     policy.reset()
     # env.videofile = None
-    agent.fit(env, callbacks=callbacks, nb_max_start_steps=30, nb_steps=EPISODE_LENGTH*args.episodes, log_interval=10000, verbose=2, action_repetition=2, nb_max_episode_steps=EPISODE_LENGTH, visualize=args.visualize)
+    agent.fit(env, callbacks=callbacks, nb_max_start_steps=30, nb_steps=EPISODE_LENGTH*args.episodes, log_interval=10000, verbose=2, action_repetition=FRAMESKIP, nb_max_episode_steps=EPISODE_LENGTH, visualize=args.visualize)
     agent.nb_steps_warmup = 0
     agent.save_weights(weights_filename, overwrite=True)
     agent.test(env_mon, nb_episodes=1, visualize=True)

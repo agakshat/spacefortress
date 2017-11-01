@@ -14,9 +14,13 @@ static PyObject*get_##name(PySpaceFortressGameObject *self) {        \
   return Py_BuildValue(type, thing); \
 }
 
-
+DEFGET(key_fire, "i", self->game->mKeys.fire);
+DEFGET(key_thrust, "i", self->game->mKeys.thrust);
+DEFGET(key_left, "i", self->game->mKeys.left);
+DEFGET(key_right, "i", self->game->mKeys.right);
 DEFGET(game_tick, "i", self->game->mTick);
 DEFGET(game_time, "i", self->game->mTime);
+DEFGET(max_game_time, "i", self->game->mConfig->getInt("gameTime"));
 DEFGET(ship_alive, "N", PyBool_FromLong(self->game->mShip.mAlive));
 DEFGET(ship_x, "d", self->game->mShip.mPos.mX);
 DEFGET(ship_y, "d", self->game->mShip.mPos.mY);
@@ -30,6 +34,7 @@ DEFGET(fortress_angle, "d", self->game->mFortress.mAngle);
 DEFGET(bighex, "i", self->game->mBighex.mRadius);
 DEFGET(smallhex, "i", self->game->mSmallhex.mRadius);
 DEFGET(points, "i", self->game->mScore.mPoints);
+DEFGET(max_points, "i", self->game->mConfig->getInt("maxPoints"));
 DEFGET(raw_points, "i", self->game->mScore.mRawPoints);
 DEFGET(vulnerability, "i", self->game->mScore.mVulnerability);
 DEFGET(vulnerability_timer, "d", self->game->mFortress.mVulnerabilityTimer);
@@ -37,6 +42,23 @@ DEFGET(vulnerability_time, "d", self->game->mConfig->getInt("fortressVulnerabili
 DEFGET(thrust_flag, "N", PyBool_FromLong(self->game->mShip.mThrustFlag));
 DEFGET(turn_flag, "i", self->game->mShip.mTurnFlag);
 
+
+static PyObject *
+get_stats(PySpaceFortressGameObject *self) {
+  return Py_BuildValue("iiiiiiiiiiii",
+    self->game->mStats.bigHexDeaths,
+    self->game->mStats.smallHexDeaths,
+    self->game->mStats.shellDeaths,
+    self->game->mStats.shipDeaths,
+    self->game->mStats.resets,
+    self->game->mStats.destroyedFortresses,
+    self->game->mStats.missedShots,
+    self->game->mStats.totalShots,
+    self->game->mStats.vlnerIncs,
+    self->game->mStats.maxVlner,
+    self->game->mScore.mPoints,
+    self->game->mScore.mRawPoints );
+}
 
 static PyObject *
 get_projectiles(Object *projectiles, int max) {
@@ -227,6 +249,10 @@ PySpaceFortressGame_init(PySpaceFortressGameObject* self, PyObject* args) {
     self->config = autoturnConfig();
   } else if( strcmp(config_name, "explode") == 0 ) {
     self->config = explodeConfig();
+  } else if( strcmp(config_name, "deep-autoturn") == 0 ) {
+    self->config = deepAutoturnConfig();
+  } else if( strcmp(config_name, "deep-explode") == 0 ) {
+    self->config = deepExplodeConfig();
   } else {
     PyErr_Format(PyExc_RuntimeError, "cannot initialize %s. Unknown config value: `%s'", Py_TYPE(self)->tp_name, config_name);
     return -1;
@@ -256,8 +282,13 @@ static PyMethodDef PySpaceFortressGame_methods[] = {
 };
 
 static PyGetSetDef PySpaceFortressGame_getset[] = {
+  {(char*)"key_fire", (getter)get_key_fire, NULL, NULL, NULL},
+  {(char*)"key_thrust", (getter)get_key_thrust, NULL, NULL, NULL},
+  {(char*)"key_left", (getter)get_key_left, NULL, NULL, NULL},
+  {(char*)"key_right", (getter)get_key_right, NULL, NULL, NULL},
   {(char*)"tick", (getter)get_game_tick, NULL, NULL, NULL},
   {(char*)"time", (getter)get_game_time, NULL, NULL, NULL},
+  {(char*)"max_time", (getter)get_max_game_time, NULL, NULL, NULL},
   {(char*)"ship_alive", (getter)get_ship_alive, NULL, NULL, NULL},
   {(char*)"ship_x", (getter)get_ship_x, NULL, NULL, NULL},
   {(char*)"ship_y", (getter)get_ship_y, NULL, NULL, NULL},
@@ -273,6 +304,7 @@ static PyGetSetDef PySpaceFortressGame_getset[] = {
   {(char*)"bighex", (getter)get_bighex, NULL, NULL, NULL},
   {(char*)"smallhex", (getter)get_smallhex, NULL, NULL, NULL},
   {(char*)"points", (getter)get_points, NULL, NULL, NULL},
+  {(char*)"max_points", (getter)get_max_points, NULL, NULL, NULL},
   {(char*)"raw_points", (getter)get_raw_points, NULL, NULL, NULL},
   {(char*)"vulnerability", (getter)get_vulnerability, NULL, NULL, NULL},
   {(char*)"vulnerability_time", (getter)get_vulnerability_time, NULL, NULL, NULL},
@@ -284,6 +316,7 @@ static PyGetSetDef PySpaceFortressGame_getset[] = {
   {(char*)"pb_pixels", (getter)get_pixels, NULL, NULL, NULL},
   {(char*)"pb_width", (getter)get_pixels_width, NULL, NULL, NULL},
   {(char*)"pb_height", (getter)get_pixels_height, NULL, NULL, NULL},
+  {(char*)"stats", (getter)get_stats, NULL, NULL, NULL},
   {NULL, NULL, NULL, NULL, NULL}
 };
 

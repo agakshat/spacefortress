@@ -16,7 +16,7 @@ setup(
     packages=find_packages(),
     namespace_packages=['spacefortress'],
     license='GPL-2',
-    install_requires=['numpy','pyglet','gym','spacefortress'],
+    install_requires=['numpy','pyglet','spacefortress'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',

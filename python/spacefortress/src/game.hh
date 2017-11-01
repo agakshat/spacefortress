@@ -28,7 +28,16 @@ typedef struct {
 } Keys;
 
 typedef struct {
+  int bigHexDeaths;
+  int smallHexDeaths;
+  int shellDeaths;
   int shipDeaths;
+  int resets;
+  int destroyedFortresses;
+  int missedShots;
+  int totalShots;
+  int vlnerIncs;
+  int maxVlner;
 } Stats;
 
 typedef struct {

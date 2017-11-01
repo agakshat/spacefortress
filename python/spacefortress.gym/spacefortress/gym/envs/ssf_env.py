@@ -47,7 +47,7 @@ class SSF_Env(gym.Env):
         'video.frames_per_second' : 30
     }
 
-    def __init__(self, gametype="explode", scale=.2, ls=3, action_set=0, continuous=False, obs_type='image'):
+    def __init__(self, gametype="deep-explode", scale=.2, ls=3, action_set=0, continuous=False, obs_type='image'):
         assert obs_type in ('image', 'features', 'normalized_features')
         self.obs_type = obs_type
         self._seed()
@@ -60,7 +60,7 @@ class SSF_Env(gym.Env):
         self.tickdur = int(np.ceil(1./self.metadata['video.frames_per_second']*1000))
 
         # 0=FIRE, 1=THRUST, 2=LEFT, 3=RIGHT
-        if self.gametype == "explode":
+        if self.gametype in ["explode","deep-explode"]:
             # if action_set == 1:
             #     self.action_combinations = np.array([
             #         [0, 0, 0, 0], # NOOP
@@ -82,7 +82,7 @@ class SSF_Env(gym.Env):
             #     ])
             # else:
             self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
-        elif self.gametype == "autoturn":
+        elif self.gametype in ["autoturn","deep-autoturn"]:
             # if action_set == 1:
             #     self.action_combinations = np.array([
             #         [0, 0], # NOOP
@@ -99,13 +99,13 @@ class SSF_Env(gym.Env):
             # else:
             self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
         if self.continuous:
-            if self.gametype == "explode":
+            if self.gametype in ["explode","deep-explode"]:
                 # Action is 3 floats [fire, thrust, turn].
                 # fire: -1..0 off, 0..+1 on
                 # thrust: -1..0 off, 0..+1 on
                 # turn:  -1.0..-0.5 left, +0.5..+1.0 right, -0.5..0.5 nothing
                 self.action_space = spaces.Box(-1, +1, (3,))
-            elif self.gametype == "autoturn":
+            elif self.gametype in ["autoturn","deep-autoturn"]:
                 # Action is 2 floats [fire, thrust].
                 # fire: -1..0 off, 0..+1 on
                 # thrust: -1..0 off, 0..+1 on
@@ -113,13 +113,15 @@ class SSF_Env(gym.Env):
         else:
             self.action_space = spaces.Discrete(len(self.action_combinations))
 
-        self.MAX_SCORE = 3748
-
         self._reset()
 
     def _get_features(self):
         if self.obs_type == 'normalized_features':
             return np.clip(np.array([
+                self.g.key_fire / self.max_ticks,
+                self.g.key_thrust / self.max_ticks,
+                self.g.key_left / self.max_ticks,
+                self.g.key_right / self.max_ticks,
                 1 if self.g.ship_alive else 0,
                 self.g.ship_x / self.g.pb_width,
                 self.g.ship_y / self.g.pb_height,
@@ -134,10 +136,14 @@ class SSF_Env(gym.Env):
                 1 if self.g.vulnerability > 10 and self.g.vulnerability_timer < self.g.vulnerability_time else 0,
                 len(self.g.missiles) / sf.MAX_MISSILES,
                 len(self.g.shells) / sf.MAX_SHELLS,
-                self.g.points / self.MAX_SCORE
+                self.g.points / self.g.max_points
                 ]), -1, 1)
         else:
             return np.array([
+                self.g.key_fire,
+                self.g.key_thrust,
+                self.g.key_left,
+                self.g.key_right,
                 self.g.ship_alive,
                 self.g.ship_x,
                 self.g.ship_y,
@@ -161,6 +167,7 @@ class SSF_Env(gym.Env):
 
     def _reset(self):
         self.g = sf.Game(self.gametype, self.scale, self.ls, True)
+        self.max_ticks = np.floor(self.g.max_time / self.tickdur)
         self.w = self.g.pb_width
         self.h = self.g.pb_height
         self.raw_pixels = self.g.pb_pixels
@@ -215,7 +222,7 @@ class SSF_Env(gym.Env):
                 self.g.press_key(sf.THRUST_KEY)
             else:
                 self.g.release_key(sf.THRUST_KEY)
-            if self.gametype == "explode":
+            if self.gametype in ["explode","deep-explode"]:
                 if action[2] < -0.5:
                     if self.last_action != None and self.last_action > 0.5:
                         self.g.release_key(sf.RIGHT_KEY)
@@ -239,7 +246,7 @@ class SSF_Env(gym.Env):
                 self.g.press_key(sf.THRUST_KEY)
             else:
                 self.g.release_key(sf.THRUST_KEY)
-            if self.gametype == "explode":
+            if self.gametype in ["explode","deep-explode"]:
                 if keystate[2]:
                     self.g.press_key(sf.LEFT_KEY)
                 else:
