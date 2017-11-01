@@ -52,7 +52,7 @@ static cairo_font_face_t *loadFont( const char *filename ) {
 
 #endif
 
-PixelBuffer* newPixelBuffer( int width, int height, double scale, double line_width, bool grayscale ) {
+PixelBuffer* newPixelBuffer( int width, int height, int vp_x, int vp_y, int vp_width, int vp_height, double line_width, bool grayscale ) {
   PixelBuffer* pb;
 
   pb = (PixelBuffer *)malloc( sizeof( PixelBuffer ));
@@ -65,7 +65,10 @@ PixelBuffer* newPixelBuffer( int width, int height, double scale, double line_wi
   pb->height = cairo_image_surface_get_height( pb->surface );
   pb->stride = cairo_image_surface_get_stride( pb->surface );
   pb->grayscale = grayscale;
-  pb->scale = scale;
+  pb->dx = -vp_x;
+  pb->dy = -vp_y;
+  pb->scale_x = (double)width / (double)vp_width;
+  pb->scale_y = (double)height / (double)vp_height;
   pb->line_width = line_width;
 
   return pb;
@@ -76,12 +79,12 @@ void freePixelBuffer( PixelBuffer* pb ) {
   free(pb);
 }
 
-static void drawWireFrame( cairo_t *ctx, const WireFrame* wf, const Vector* p, int angle, double grayscale ) {
+static void drawWireFrame( cairo_t *ctx, const WireFrame* wf, const Vector* p, int angle, double ls, double grayscale ) {
   int i;
   cairo_save( ctx );
   cairo_translate( ctx, p->mX, p->mY );
   cairo_rotate( ctx, deg2rad( angle ));
-  cairo_set_line_width( ctx, 3);
+  cairo_set_line_width( ctx, ls);
   if (grayscale<0 || grayscale>1)
     cairo_set_source_rgb( ctx, wf->r/255.0, wf->g/255.0, wf->b/255.0 );
   else
@@ -228,40 +231,40 @@ static void drawJustGameStuff( cairo_t *ctx, Game *g, float ls, bool grayscale )
   drawHexagon( ctx, &g->mSmallhex, grayscale ? 1 : -1 );
 
   if( g->mShip.mAlive ) {
-    drawWireFrame( ctx, &shipWireFrame, &g->mShip.mPos, g->mShip.mAngle, grayscale ? 1 : -1 );
+    drawWireFrame( ctx, &shipWireFrame, &g->mShip.mPos, g->mShip.mAngle, ls, grayscale ? 1 : -1 );
   } else {
     drawExplosion( ctx, &g->mShip.mPos, ls, grayscale);
   }
   if( g->mFortress.mAlive ) {
-    drawWireFrame( ctx, &fortressWireFrame, &g->mFortress.mPos, g->mFortress.mAngle, grayscale ? 1 : -1 );
+    drawWireFrame( ctx, &fortressWireFrame, &g->mFortress.mPos, g->mFortress.mAngle, ls, grayscale ? 1 : -1 );
   } else {
     drawExplosion( ctx, &g->mFortress.mPos, ls, grayscale);
   }
   for (i=0; i<MAX_MISSILES; i++) {
     if (g->mMissiles[i].mAlive) {
-      drawWireFrame(ctx, &missileWireFrame, &g->mMissiles[i].mPos, g->mMissiles[i].mAngle, grayscale ? 1 : -1 );
+      drawWireFrame(ctx, &missileWireFrame, &g->mMissiles[i].mPos, g->mMissiles[i].mAngle, ls, grayscale ? 1 : -1 );
     }
   }
   for (i=0; i<MAX_SHELLS; i++) {
     double d = sqrt(pow(g->mShells[i].mPos.mX - g->mFortress.mPos.mX, 2) + pow(g->mShells[i].mPos.mY - g->mFortress.mPos.mY, 2));
     if (g->mShells[i].mAlive && d > 21) {
-      drawWireFrame(ctx, &shellWireFrame, &g->mShells[i].mPos, g->mShells[i].mAngle, grayscale ? 1 : -1 );
+      drawWireFrame(ctx, &shellWireFrame, &g->mShells[i].mPos, g->mShells[i].mAngle, ls, grayscale ? 1 : -1 );
     }
   }
 }
 
-void drawGameStateScaled( Game *g, cairo_surface_t *surface, float scale, float line_width, bool grayscale) {
-  cairo_t *ctx = cairo_create( surface );
-  if ( scale < 1 )
-    cairo_scale( ctx, scale, scale );
+void drawGameStateScaled( Game *g, PixelBuffer *pb) {
+  cairo_t *ctx = cairo_create( pb->surface );
 
-  cairo_set_line_width( ctx, line_width );
+  cairo_scale( ctx, pb->scale_x, pb->scale_y );
+  cairo_translate( ctx, pb->dx, pb->dy );
+  cairo_set_line_width( ctx, pb->line_width );
   cairo_set_source_rgb( ctx, 0, 0, 0 );
   cairo_paint( ctx );
 
-  drawJustGameStuff( ctx, g, line_width, grayscale );
-  // drawKeyState( ctx, ls, g->keys.left, g->keys.right, g->keys.thrust, g->keys.fire, grayscale);
-  drawScore( ctx, g->mScore.mPoints, line_width, grayscale);
-  drawVlner( ctx, g->mScore.mVulnerability, (g->mScore.mVulnerability > 10) && (g->mFortress.mVulnerabilityTimer < g->mConfig->getInt("fortressVulnerabilityTime")), line_width, grayscale);
+  drawJustGameStuff( ctx, g, pb->line_width, pb->grayscale );
+  // drawKeyState( ctx, ls, g->keys.left, g->keys.right, g->keys.thrust, g->keys->fire, grayscale);
+  drawScore( ctx, g->mScore.mPoints, pb->line_width, pb->grayscale);
+  drawVlner( ctx, g->mScore.mVulnerability, (g->mScore.mVulnerability > 10) && (g->mFortress.mVulnerabilityTimer < g->mConfig->getInt("fortressVulnerabilityTime")), pb->line_width, pb->grayscale);
   cairo_destroy( ctx );
 }

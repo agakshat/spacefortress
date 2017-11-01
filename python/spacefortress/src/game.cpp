@@ -455,3 +455,62 @@ void Game::maybeAdjustHexSizes(int &bigHex, int &smallHex) {
 void Game::calculateBonus() {
   mBonus = round( mScore.mPoints * mConfig->getInt( "maxBonus" ) / float( mConfig->getInt( "maxPoints" )));
 }
+
+std::string Game::dumpState() {
+  bool first;
+  std::stringstream out;
+  out << std::fixed;
+  out << "[" << mTime << ","
+      << (mShip.mAlive?1:0) << ","
+      << std::setprecision( 3 )
+      << mShip.mPos.mX << ","
+      << mShip.mPos.mY << ","
+      << mShip.mVel.mX << ","
+      << mShip.mVel.mY << ","
+      << std::setprecision( 1 )
+      << mShip.mAngle << ","
+      << (mFortress.mAlive?1:0) << ","
+      << mFortress.mAngle << ",";
+
+  out << "[";;
+  first = true;
+  for (int i=0; i<MAX_MISSILES; i++) {
+    if (mMissiles[i].mAlive) {
+      out << (first?"":",")
+          << std::setprecision( 3 )
+          << mMissiles[i].mPos.mX << ","
+          << mMissiles[i].mPos.mY << ","
+          << std::setprecision( 1 )
+          << mMissiles[i].mAngle;
+      first = false;
+    }
+  }
+  out << "],[";
+  first = true;
+  for (int i=0; i<MAX_SHELLS; i++) {
+    if (mShells[i].mAlive) {
+      out << (first?"":",")
+          << std::setprecision( 3 )
+          << mShells[i].mPos.mX << ","
+          << mShells[i].mPos.mY << ","
+          << std::setprecision( 1 )
+          << mShells[i].mAngle;
+      first = false;
+    }
+  }
+  out << "],";
+  out << mScore.mPoints << ","
+      << mScore.mVulnerability << ","
+      << (mShip.mThrustFlag?1:0) << ","
+      << mShip.mTurnFlag << ",";
+  /* Game Events */
+  out << "[";
+  for( size_t i=0; i<mEvents.size(); i++ ) {
+    out << (i==0?"":",")
+        << "\"" << mEvents[i] << "\"";
+  }
+  out << "]";
+  out << "]";
+
+  return out.str();
+}

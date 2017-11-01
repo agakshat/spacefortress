@@ -125,4 +125,5 @@ public:
   bool isGameOver();
   void maybeAdjustHexSizes(int &bigHex, int &smallHex);
   void calculateBonus();
+  std::string dumpState();
 };

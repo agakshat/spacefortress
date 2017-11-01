@@ -161,7 +161,7 @@ isGameOver(PySpaceFortressGameObject *self, PyObject *args)
 
 static PyObject *
 draw(PySpaceFortressGameObject *self, PyObject *args) {
-  drawGameStateScaled( self->game, self->buffer->surface, self->buffer->scale, self->buffer->line_width, self->buffer->grayscale );
+  drawGameStateScaled( self->game, self->buffer );
 
   Py_RETURN_NONE;
 }
@@ -207,6 +207,11 @@ get_config_value(PySpaceFortressGameObject *self, PyObject *args) {
   }
 }
 
+static PyObject *
+dumpState(PySpaceFortressGameObject *self, PyObject *args) {
+  return Py_BuildValue("s", self->game->dumpState().c_str());
+}
+
 static void
 PySpaceFortressGame_delete(PySpaceFortressGameObject *self)
 {
@@ -232,13 +237,16 @@ PySpaceFortressGame_new(PyTypeObject* type, PyObject*, PyObject*)
 }
 
 static int
-PySpaceFortressGame_init(PySpaceFortressGameObject* self, PyObject* args) {
-  int width = 0, height = 0;
-  double scale = 1.0;
+PySpaceFortressGame_init(PySpaceFortressGameObject* self, PyObject* args, PyObject *kwargs) {
+  static const char* kw_names[] = {"config", "lw", "grayscale", "width", "height", "viewport", NULL};
+  static char** kwlist = const_cast<char**>(kw_names);
+
+  int width = -1, height = -1;
+  int vp_x = 0, vp_y = 0, vp_width = -1, vp_height = -1;
   double line_width = 2.0;
   int grayscale = 0;
   char *config_name;
-  if( !PyArg_ParseTuple( args, "s|ddi", &config_name, &scale, &line_width, &grayscale ))
+  if( !PyArg_ParseTupleAndKeywords( args, kwargs, "s|diii(iiii)", kwlist, &config_name, &line_width, &grayscale, &width, &height, &vp_x, &vp_y, &vp_width, &vp_height ))
     return -1;
 
   if( strcmp(config_name, "staircase-training") == 0 ) {
@@ -259,9 +267,12 @@ PySpaceFortressGame_init(PySpaceFortressGameObject* self, PyObject* args) {
   }
 
   self->game = new Game(self->config);
-  width = ceil(self->config->getInt("width") * scale);
-  height = ceil(self->config->getInt("height") * scale);
-  self->buffer = newPixelBuffer( width, height, scale, line_width, grayscale );
+  if (vp_width == -1) vp_width = self->config->getInt("width");
+  if (vp_height == -1) vp_height = self->config->getInt("height");
+  if (width == -1) width = vp_width;
+  if (height == -1) height = vp_height;
+
+  self->buffer = newPixelBuffer( width, height, vp_x, vp_y, vp_width, vp_height, line_width, grayscale );
 
   return 0;
 }
@@ -278,6 +289,7 @@ static PyMethodDef PySpaceFortressGame_methods[] = {
   {"is_game_over", (PyCFunction)isGameOver, METH_NOARGS, NULL},
   {"draw", (PyCFunction)draw, METH_NOARGS, NULL},
   {"config", (PyCFunction)get_config_value, METH_VARARGS, NULL},
+  {"dump", (PyCFunction)dumpState, METH_NOARGS, NULL},
   {NULL, NULL, 0, NULL}
 };
 
