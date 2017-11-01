@@ -273,8 +273,16 @@ static double vdir(const Object &ship, const Object &fortress) {
   return rad2deg(diff);
 }
 
+static double aim(const Object &ship, const Object &fortress) {
+  double o = atan2((ship.mPos.mY-fortress.mPos.mY), (ship.mPos.mX-fortress.mPos.mX));
+  o = rad2deg(o) - ship.mAngle + 180;
+  if (o < -180) o + 360;
+  return o;
+}
+
 void Game::computeExtra() {
   mExtra.vdir = vdir( mShip, mFortress );
+  mExtra.aim = aim( mShip, mFortress );
   mExtra.fdist = sqrt(pow(mShip.mPos.mX - mFortress.mPos.mX, 2) + pow(mShip.mPos.mY - mShip.mPos.mY, 2));
   mExtra.ndist = normDist(mExtra.fdist, mBighex.mRadius, mSmallhex.mRadius);
 }

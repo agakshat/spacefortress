@@ -49,7 +49,7 @@ typedef struct {
 } GameScore;
 
 typedef struct {
-  double vdir, fdist, ndist;
+  double vdir, fdist, ndist, aim;
 } ExtraGameValues;
 
 class Ship: public Object {

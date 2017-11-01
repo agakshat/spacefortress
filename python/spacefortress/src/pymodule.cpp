@@ -28,6 +28,7 @@ DEFGET(ship_vx, "d", self->game->mShip.mVel.mX);
 DEFGET(ship_vy, "d", self->game->mShip.mVel.mY);
 DEFGET(ship_angle, "d", self->game->mShip.mAngle);
 DEFGET(vdir, "d", self->game->mExtra.vdir);
+DEFGET(aim, "d", self->game->mExtra.aim);
 DEFGET(ndist, "d", self->game->mExtra.ndist);
 DEFGET(fortress_alive, "N", PyBool_FromLong(self->game->mFortress.mAlive));
 DEFGET(fortress_angle, "d", self->game->mFortress.mAngle);
@@ -308,6 +309,7 @@ static PyGetSetDef PySpaceFortressGame_getset[] = {
   {(char*)"ship_vy", (getter)get_ship_vy, NULL, NULL, NULL},
   {(char*)"ship_angle", (getter)get_ship_angle, NULL, NULL, NULL},
   {(char*)"vdir", (getter)get_vdir, NULL, NULL, NULL},
+  {(char*)"aim", (getter)get_aim, NULL, NULL, NULL},
   {(char*)"ndist", (getter)get_ndist, NULL, NULL, NULL},
   {(char*)"fortress_alive", (getter)get_fortress_alive, NULL, NULL, NULL},
   {(char*)"fortress_angle", (getter)get_fortress_angle, NULL, NULL, NULL},
