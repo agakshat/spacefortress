@@ -4,11 +4,13 @@ void baseConfig(Config *c) {
   c->set("width", 710);
   c->set("height", 626);
   c->set("gameTime", 60000);
+
   c->set("destroyFortress", 100);
   c->set("shipDeathPenalty", 100);
   c->set("missilePenalty", 2);
   c->set("missPenalty", 0);
-  c->set("incReward", 0);
+  c->set("incRewardInvulnerable", 0);
+  c->set("incRewardVulnerable", 0);
 
   c->set("maxPoints", 1249);
   c->set("maxBonus", 90);
@@ -81,7 +83,8 @@ Config *explodeConfig() {
 void deepConfig(Config *c) {
   c->set("missilePenalty", 0);
   c->set("missPenalty", 2);
-  c->set("incReward", 10);
+  c->set("incRewardInvulnerable", 10);
+  c->set("incRewardVulnerable", 0.5);
 }
 
 Config *deepAutoturnConfig() {

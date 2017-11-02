@@ -336,8 +336,10 @@ void Game::updateMissiles() {
           if (mFortress.mVulnerabilityTimer >= mConfig->getInt("fortressVulnerabilityTime")) {
             playSound( VLNER_INCREASE_SOUND );
             if (mScore.mVulnerability < 10)
-              reward( mConfig->getInt("incReward") );
+              reward( mConfig->getInt("incRewardInvulnerable") );
             mScore.mVulnerability += 1;
+            if (mScore.mVulnerability > 10)
+              reward( mConfig->getDouble("incRewardVulnerable") );
             addEvent("vlner-increased");
             mStats.vlnerIncs += 1;
             if (mScore.mVulnerability > mStats.maxVlner)
@@ -353,7 +355,7 @@ void Game::updateMissiles() {
             } else {
               playSound( VLNER_RESET_SOUND );
               addEvent("vlner-reset");
-              penalize( mScore.mVulnerability * mConfig->getInt("incReward") );
+              penalize( mScore.mVulnerability * mConfig->getInt("incRewardInvulnerable") );
               mStats.resets += 1;
             }
             mScore.mVulnerability = 0;

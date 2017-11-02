@@ -48,7 +48,7 @@ class SSF_Env(gym.Env):
     }
 
     def __init__(self, gametype="deep-explode", scale=.2, viewport=(130,80,450,460), ls=3, action_set=0, continuous=False, obs_type='image'):
-        assert obs_type in ('image', 'features', 'normalized_features')
+        assert obs_type in ('image', 'features', 'normalized_features', 'monitors')
         self.obs_type = obs_type
         self._seed()
         self.continuous = continuous
@@ -63,43 +63,25 @@ class SSF_Env(gym.Env):
 
         # 0=FIRE, 1=THRUST, 2=LEFT, 3=RIGHT
         if self.gametype in ["explode","deep-explode"]:
-            # if action_set == 1:
-            #     self.action_combinations = np.array([
-            #         [0, 0, 0, 0], # NOOP
-            #         [1, 0, 0, 0], # FIRE
-            #         [0, 1, 0, 0], # THRUST
-            #         [0, 0, 1, 0], # LEFT
-            #         [0, 0, 0, 1], # RIGHT
-            #         [1, 1, 0, 0], # FIRE & THRUST
-            #         [1, 0, 1, 0], # FIRE & LEFT
-            #         [1, 0, 0, 1], # FIRE & RIGHT
-            #     ])
-            # if action_set == 2:
-            #     self.action_combinations = np.array([
-            #         [0, 0, 0, 0], # NOOP
-            #         [1, 0, 0, 0], # FIRE
-            #         [0, 1, 0, 0], # THRUST
-            #         [0, 0, 1, 0], # LEFT
-            #         [0, 0, 0, 1], # RIGHT
-            #     ])
-            # else:
-            self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
+            if action_set == 0:
+                self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
+            elif action_set == 1:
+                self.action_combinations = np.array([
+                    [0, 0, 0, 0], # NOOP
+                    [1, 0, 0, 0], # FIRE
+                    [0, 1, 0, 0], # THRUST
+                    [0, 0, 1, 0], # LEFT
+                    [0, 0, 0, 1], # RIGHT
+                ])
         elif self.gametype in ["autoturn","deep-autoturn"]:
-            # if action_set == 1:
-            #     self.action_combinations = np.array([
-            #         [0, 0], # NOOP
-            #         [1, 0], # FIRE
-            #         [0, 1], # THRUST
-            #         [1, 1], # FIRE & THRUST
-            #     ])
-            # if action_set == 2:
-            #     self.action_combinations = np.array([
-            #         [0, 0], # NOOP
-            #         [1, 0], # FIRE
-            #         [0, 1], # THRUST
-            #     ])
-            # else:
-            self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
+            if action_set == 0:
+                self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1])).T.reshape(-1,2)
+            elif action_set == 1:
+                self.action_combinations = np.array([
+                    [0, 0], # NOOP
+                    [1, 0], # FIRE
+                    [0, 1], # THRUST
+                ])
         if self.continuous:
             if self.gametype in ["explode","deep-explode"]:
                 # Action is 3 floats [fire, thrust, turn].
@@ -118,27 +100,41 @@ class SSF_Env(gym.Env):
         self._reset()
 
     def _get_features(self):
-        if self.obs_type == 'normalized_features':
+        if self.obs_type == 'monitors':
+            return np.array([
+                0.5 if len(self.g.missiles) > 0 else -0.5,
+                0.5 if self.g.fortress_alive else -0.5,
+                0.5 if self.g.vulnerability > 10 else -0.5,
+                0.5 if self.g.vulnerability > 10 and self.g.vulnerability_timer < self.g.vulnerability_time else -0.5,
+                0.5 if self.g.aim < 3 else -0.5,
+                0.5 if self.g.aim > 3 else -0.5,
+                0.5 if self.g.ndist > .75 else -0.5,
+                0.5 if self.g.ndist > .25 else -0.5,
+                0.5 if self.g.ndist < -.25 else -0.5,
+                0.5 if self.g.ndist < -.75 else -0.5
+            ])
+        elif self.obs_type == 'normalized_features':
             return np.clip(np.array([
                 self.g.key_fire / self.max_ticks,
                 self.g.key_thrust / self.max_ticks,
                 self.g.key_left / self.max_ticks,
                 self.g.key_right / self.max_ticks,
                 1 if self.g.ship_alive else 0,
-                self.g.ship_x / self.g.pb_width,
-                self.g.ship_y / self.g.pb_height,
+                #self.g.ship_x / self.g.pb_width,
+                #self.g.ship_y / self.g.pb_height,
                 self.g.ship_vx / 10,
                 self.g.ship_vy / 10,
-                self.g.ship_angle / 360,
+                #self.g.ship_angle / 360,
+                self.g.aim / 360,
                 self.g.vdir % 360 / 360,
                 self.g.ndist,
                 1 if self.g.fortress_alive else 0,
-                self.g.fortress_angle / 360,
+                #self.g.fortress_angle / 360,
                 max(self.g.vulnerability, 10) / 10,
                 1 if self.g.vulnerability > 10 and self.g.vulnerability_timer < self.g.vulnerability_time else 0,
                 len(self.g.missiles) / sf.MAX_MISSILES,
                 len(self.g.shells) / sf.MAX_SHELLS,
-                self.g.points / self.g.max_points
+                #self.g.points / self.g.max_points
                 ]), -1, 1)
         else:
             return np.array([
@@ -147,20 +143,21 @@ class SSF_Env(gym.Env):
                 self.g.key_left,
                 self.g.key_right,
                 self.g.ship_alive,
-                self.g.ship_x,
-                self.g.ship_y,
+                #self.g.ship_x,
+                #self.g.ship_y,
                 self.g.ship_vx,
                 self.g.ship_vy,
-                self.g.ship_angle,
+                #self.g.ship_angle,
+                self.g.aim,
                 self.g.vdir,
                 self.g.ndist,
                 self.g.fortress_alive,
-                self.g.fortress_angle,
+                #self.g.fortress_angle,
                 self.g.vulnerability,
                 1 if self.g.vulnerability > 10 and self.g.vulnerability_timer < self.g.vulnerability_time else 0,
                 len(self.g.missiles),
                 len(self.g.shells),
-                self.g.points
+                #self.g.points
                 ])
 
     def _seed(self, seed=None):
