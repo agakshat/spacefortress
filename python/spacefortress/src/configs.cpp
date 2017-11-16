@@ -83,8 +83,10 @@ Config *explodeConfig() {
 void deepConfig(Config *c) {
   c->set("missilePenalty", 0);
   c->set("missPenalty", 2);
-  c->set("incRewardInvulnerable", 10);
+  c->set("incRewardInvulnerable", 5);
   c->set("incRewardVulnerable", 0.5);
+  c->set("shipDeathPenalty", 1000);
+  c->set("destroyFortress", 10000);
 }
 
 Config *deepAutoturnConfig() {

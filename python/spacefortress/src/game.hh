@@ -22,7 +22,6 @@ typedef struct {
 } Key;
 
 typedef struct {
-  bool thrust, left, right, fire;
   std::vector<Key> events;
   bool processed;
 } Keys;
@@ -36,6 +35,9 @@ typedef struct {
   int destroyedFortresses;
   int missedShots;
   int totalShots;
+  int totalThrusts;
+  int totalLefts;
+  int totalRights;
   int vlnerIncs;
   int maxVlner;
 } Stats;
@@ -55,7 +57,14 @@ typedef struct {
 class Ship: public Object {
 public:
   Timer mDeathTimer;
+  Timer mFireTimer;
+  Timer mThrustTimer;
+  Timer mLeftTimer;
+  Timer mRightTimer;
   bool mThrustFlag;
+  bool mFireFlag;
+  bool mLeftFlag;
+  bool mRightFlag;
   Turn mTurnFlag;
 
   Ship();
@@ -85,6 +94,9 @@ public:
   Stats mStats;
   ExtraGameValues mExtra;
   std::vector<std::string> mEvents;
+  std::vector<int> mThrustDurations;
+  std::vector<int> mShotDurations;
+  std::vector<int> mShotIntervals;
 
 public:
   GameScore mScore;

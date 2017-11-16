@@ -1,8 +1,10 @@
 #include "space-fortress.hh"
 
 Ship::Ship() : Object() {
+   mFireFlag = false;
    mThrustFlag = false;
-   mTurnFlag = NO_TURN;
+   mLeftFlag = false;
+   mRightFlag = false;
 }
 
 Ship::~Ship() { }
@@ -16,10 +18,6 @@ Fortress::~Fortress() { }
 Game::Game( Config *config ) {
   mConfig = config;
 
-  mKeys.thrust = 0;
-  mKeys.left = 0;
-  mKeys.right = 0;
-  mKeys.fire = 0;
   mKeys.events.clear();
   mKeys.processed = false;
 
@@ -27,8 +25,12 @@ Game::Game( Config *config ) {
   mSmallhex.setRadius( config->getInt( "smallHex" ));
 
   mShip.mCollisionRadius = mConfig->getInt("shipCollisionRadius");
+  mShip.mFireFlag = false;
   mShip.mThrustFlag = false;
+  mShip.mLeftFlag = false;
+  mShip.mRightFlag = false;
   mShip.mTurnFlag = NO_TURN;
+
   resetShip();
 
   mFortress.mAlive = true;
@@ -53,14 +55,25 @@ Game::Game( Config *config ) {
   mStats.destroyedFortresses = 0;
   mStats.missedShots = 0;
   mStats.totalShots = 0;
+  mStats.totalThrusts = 0;
+  mStats.totalLefts = 0;
+  mStats.totalRights = 0;
   mStats.vlnerIncs = 0;
   mStats.maxVlner = 0;
+
+  mThrustDurations.clear();
+  mShotDurations.clear();
+  mShotIntervals.clear();
 
   mTick = 0;
   mTime = 0;
 
   mFortress.mTimer = 0;
   mFortress.mDeathTimer = 0;
+  mShip.mFireTimer = 0;
+  mShip.mThrustTimer = 0;
+  mShip.mLeftTimer = 0;
+  mShip.mRightTimer = 0;
   mFortress.mVulnerabilityTimer += mConfig->getInt("fortressVulnerabilityTime");
   mShip.mDeathTimer = 0;
 
@@ -162,7 +175,6 @@ void Game::fireMissile( const Vector &p, double angle ) {
         mMissiles[i].mVel.mY = mConfig->getInt("missileSpeed") * sin(deg2rad(angle));
         addEvent( "missile-fired" );
         penalize( mConfig->getInt( "missilePenalty" ));
-        mStats.totalShots += 1;
         return;
       }
     }
@@ -200,56 +212,54 @@ void Game::processKeyState() {
   for(size_t i=0; i<mKeys.events.size(); i++) {
     addEvent(( mKeys.events[i].state ? "press-":"release-" ) + keyNames[mKeys.events[i].sym] );
     if (mKeys.events[i].state == true) {
-      if (mKeys.events[i].sym == LEFT_KEY) {
-        mShip.mTurnFlag = TURN_LEFT;
-        if (mKeys.left < 0)
-          mKeys.left = 0;
-        mKeys.left += 1;
-      } else if (mKeys.events[i].sym == RIGHT_KEY) {
-        mShip.mTurnFlag = TURN_RIGHT;
-        if (mKeys.right < 0)
-          mKeys.right = 0;
-        mKeys.right += 1;
-      } else if (mKeys.events[i].sym == THRUST_KEY) {
+      if (mKeys.events[i].sym == LEFT_KEY && !mShip.mLeftFlag) {
+        mShip.mLeftFlag = true;
+        mShip.mLeftTimer = 0;
+        mStats.totalLefts += 1;
+      } else if (mKeys.events[i].sym == RIGHT_KEY && !mShip.mRightFlag) {
+        mShip.mRightFlag = true;
+        mShip.mRightTimer = 0;
+        mStats.totalRights += 1;
+      } else if (mKeys.events[i].sym == THRUST_KEY && !mShip.mThrustFlag) {
         mShip.mThrustFlag = true;
-        if (mKeys.thrust < 0)
-          mKeys.thrust = 0;
-        mKeys.thrust += 1;
-      } else if (mKeys.events[i].sym == FIRE_KEY) {
+        mShip.mThrustTimer = 0;
+        mStats.totalThrusts += 1;
+      } else if (mKeys.events[i].sym == FIRE_KEY && !mShip.mFireFlag) {
         fireMissile(mShip.mPos, mShip.mAngle);
-        if (mKeys.fire < 0)
-          mKeys.fire = 0;
-        mKeys.fire += 1;
+        mShip.mFireFlag = true;
+        mShotIntervals.push_back( abs(mShip.mFireTimer) );
+        mShip.mFireTimer = 0;
+        mStats.totalShots += 1;
       }
     } else {
-      if (mKeys.events[i].sym == LEFT_KEY) {
-        mShip.mTurnFlag = NO_TURN;
-        if (mKeys.left > 0)
-          mKeys.left = 0;
-        mKeys.left -= 1;
-      } else if (mKeys.events[i].sym == RIGHT_KEY) {
-        mShip.mTurnFlag = NO_TURN;
-        if (mKeys.right > 0)
-          mKeys.right = 0;
-        mKeys.right -= 1;
-      } else if (mKeys.events[i].sym == THRUST_KEY) {
+      if (mKeys.events[i].sym == LEFT_KEY && mShip.mLeftFlag) {
+        mShip.mLeftFlag = false;
+        mShip.mLeftTimer = 0;
+      } else if (mKeys.events[i].sym == RIGHT_KEY && mShip.mRightFlag) {
+        mShip.mRightFlag = false;
+        mShip.mRightTimer = 0;
+      } else if (mKeys.events[i].sym == THRUST_KEY && mShip.mThrustFlag) {
         mShip.mThrustFlag = false;
-        if (mKeys.thrust > 0)
-          mKeys.thrust = 0;
-        mKeys.thrust -= 1;
-      } else if (mKeys.events[i].sym == FIRE_KEY) {
-        if (mKeys.fire > 0)
-          mKeys.fire = 0;
-        mKeys.fire -= 1;
+        mThrustDurations.push_back( mShip.mThrustTimer );
+        mShip.mThrustTimer = 0;
+      } else if (mKeys.events[i].sym == FIRE_KEY && mShip.mFireFlag) {
+        mShip.mFireFlag = false;
+        mShotDurations.push_back( mShip.mFireTimer );
+        mShip.mFireTimer = 0;
       }
     }
   }
+  if (mShip.mLeftFlag && !mShip.mRightFlag)
+    mShip.mTurnFlag = TURN_LEFT;
+  else if (!mShip.mLeftFlag && mShip.mRightFlag)
+    mShip.mTurnFlag = TURN_RIGHT;
+  else
+    mShip.mTurnFlag = NO_TURN;
   mKeys.processed = true;
 }
 
 void Game::killShip() {
   if (mShip.mAlive) {
-    penalize(mConfig->getInt("shipDeathPenalty"));
     mShip.mAlive = false;
     mShip.mDeathTimer = 0;
     mStats.shipDeaths += 1;
@@ -276,7 +286,8 @@ static double vdir(const Object &ship, const Object &fortress) {
 static double aim(const Object &ship, const Object &fortress) {
   double o = atan2((ship.mPos.mY-fortress.mPos.mY), (ship.mPos.mX-fortress.mPos.mX));
   o = rad2deg(o) - ship.mAngle + 180;
-  if (o < -180) o + 360;
+  if (o < -180)
+    o = o + 360;
   return o;
 }
 
@@ -310,11 +321,13 @@ void Game::updateShip() {
 
     if (!mBighex.isInside(mShip.mPos)) {
       killShip();
+      penalize(mConfig->getInt("shipDeathPenalty"));
       mStats.bigHexDeaths += 1;
       mCollisions.bigHex = true;
       addEvent("explode-bighex");
     } else if (mSmallhex.isInside(mShip.mPos)) {
       killShip();
+      penalize(mConfig->getInt("shipDeathPenalty"));
       mStats.smallHexDeaths += 1;
       mCollisions.smallHex = true;
       addEvent("explode-smallhex");
@@ -335,11 +348,11 @@ void Game::updateMissiles() {
           addEvent("hit-fortress");
           if (mFortress.mVulnerabilityTimer >= mConfig->getInt("fortressVulnerabilityTime")) {
             playSound( VLNER_INCREASE_SOUND );
-            if (mScore.mVulnerability < 10)
-              reward( mConfig->getInt("incRewardInvulnerable") );
             mScore.mVulnerability += 1;
+            if (mScore.mVulnerability < 11)
+              reward( mScore.mVulnerability * mScore.mVulnerability );
             if (mScore.mVulnerability > 10)
-              reward( mConfig->getDouble("incRewardVulnerable") );
+              penalize( 2 );
             addEvent("vlner-increased");
             mStats.vlnerIncs += 1;
             if (mScore.mVulnerability > mStats.maxVlner)
@@ -355,7 +368,7 @@ void Game::updateMissiles() {
             } else {
               playSound( VLNER_RESET_SOUND );
               addEvent("vlner-reset");
-              penalize( mScore.mVulnerability * mConfig->getInt("incRewardInvulnerable") );
+              penalize( mScore.mVulnerability+1 );
               mStats.resets += 1;
             }
             mScore.mVulnerability = 0;
@@ -383,6 +396,7 @@ void Game::updateShells() {
         mCollisions.shellShip = true;
         mShells[i].mAlive = false;
         killShip();
+        penalize(mConfig->getInt("shipDeathPenalty")/10);
         mStats.shellDeaths += 1;
         addEvent("shell-hit-ship");
       } else if (isOutsideGameArea(mShells[i].mPos)) {
@@ -398,6 +412,26 @@ void Game::stepTimers(int ms) {
   mFortress.mDeathTimer += ms;
   mFortress.mVulnerabilityTimer += ms;
   mShip.mDeathTimer += ms;
+
+  if (mShip.mFireFlag)
+    mShip.mFireTimer += 1;
+  else
+    mShip.mFireTimer -= 1;
+
+  if (mShip.mThrustFlag)
+    mShip.mThrustTimer += 1;
+  else
+    mShip.mThrustTimer -= 1;
+
+  if (mShip.mLeftFlag)
+    mShip.mLeftTimer += 1;
+  else
+    mShip.mLeftTimer -= 1;
+
+  if (mShip.mRightFlag)
+    mShip.mRightTimer += 1;
+  else
+    mShip.mRightTimer -= 1;
 }
 
 void Game::resetCollisions() {

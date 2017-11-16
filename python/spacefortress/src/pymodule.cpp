@@ -14,10 +14,6 @@ static PyObject*get_##name(PySpaceFortressGameObject *self) {        \
   return Py_BuildValue(type, thing); \
 }
 
-DEFGET(key_fire, "i", self->game->mKeys.fire);
-DEFGET(key_thrust, "i", self->game->mKeys.thrust);
-DEFGET(key_left, "i", self->game->mKeys.left);
-DEFGET(key_right, "i", self->game->mKeys.right);
 DEFGET(game_tick, "i", self->game->mTick);
 DEFGET(game_time, "i", self->game->mTime);
 DEFGET(max_game_time, "i", self->game->mConfig->getInt("gameTime"));
@@ -46,7 +42,7 @@ DEFGET(turn_flag, "i", self->game->mShip.mTurnFlag);
 
 static PyObject *
 get_stats(PySpaceFortressGameObject *self) {
-  return Py_BuildValue("iiiiiiiiiiii",
+  return Py_BuildValue("iiiiiiiiiiiiiii",
     self->game->mStats.bigHexDeaths,
     self->game->mStats.smallHexDeaths,
     self->game->mStats.shellDeaths,
@@ -55,10 +51,22 @@ get_stats(PySpaceFortressGameObject *self) {
     self->game->mStats.destroyedFortresses,
     self->game->mStats.missedShots,
     self->game->mStats.totalShots,
+    self->game->mStats.totalThrusts,
+    self->game->mStats.totalLefts,
+    self->game->mStats.totalRights,
     self->game->mStats.vlnerIncs,
     self->game->mStats.maxVlner,
     self->game->mScore.mPoints,
     self->game->mScore.mRawPoints );
+}
+
+static PyObject *
+get_timers(PySpaceFortressGameObject *self) {
+  return Py_BuildValue("iiii",
+    self->game->mShip.mFireTimer,
+    self->game->mShip.mThrustTimer,
+    self->game->mShip.mLeftTimer,
+    self->game->mShip.mRightTimer );
 }
 
 static PyObject *
@@ -95,6 +103,33 @@ get_events(PySpaceFortressGameObject *self) {
   PyObject* retval = PyTuple_New( self->game->mEvents.size() );
   for( size_t i=0; i < self->game->mEvents.size(); i++ ) {
     PyTuple_SET_ITEM( retval, i, Py_BuildValue("s", self->game->mEvents[i].c_str() ));
+  }
+  return Py_BuildValue("O", retval);
+}
+
+static PyObject *
+get_thrust_durations(PySpaceFortressGameObject *self) {
+  PyObject* retval = PyTuple_New( self->game->mThrustDurations.size() );
+  for( size_t i=0; i < self->game->mThrustDurations.size(); i++ ) {
+    PyTuple_SET_ITEM( retval, i, Py_BuildValue("i", self->game->mThrustDurations[i] ));
+  }
+  return Py_BuildValue("O", retval);
+}
+
+static PyObject *
+get_shot_durations(PySpaceFortressGameObject *self) {
+  PyObject* retval = PyTuple_New( self->game->mShotDurations.size() );
+  for( size_t i=0; i < self->game->mShotDurations.size(); i++ ) {
+    PyTuple_SET_ITEM( retval, i, Py_BuildValue("i", self->game->mShotDurations[i] ));
+  }
+  return Py_BuildValue("O", retval);
+}
+
+static PyObject *
+get_shot_intervals(PySpaceFortressGameObject *self) {
+  PyObject* retval = PyTuple_New( self->game->mShotIntervals.size() );
+  for( size_t i=0; i < self->game->mShotIntervals.size(); i++ ) {
+    PyTuple_SET_ITEM( retval, i, Py_BuildValue("i", self->game->mShotIntervals[i] ));
   }
   return Py_BuildValue("O", retval);
 }
@@ -295,10 +330,6 @@ static PyMethodDef PySpaceFortressGame_methods[] = {
 };
 
 static PyGetSetDef PySpaceFortressGame_getset[] = {
-  {(char*)"key_fire", (getter)get_key_fire, NULL, NULL, NULL},
-  {(char*)"key_thrust", (getter)get_key_thrust, NULL, NULL, NULL},
-  {(char*)"key_left", (getter)get_key_left, NULL, NULL, NULL},
-  {(char*)"key_right", (getter)get_key_right, NULL, NULL, NULL},
   {(char*)"tick", (getter)get_game_tick, NULL, NULL, NULL},
   {(char*)"time", (getter)get_game_time, NULL, NULL, NULL},
   {(char*)"max_time", (getter)get_max_game_time, NULL, NULL, NULL},
@@ -326,11 +357,15 @@ static PyGetSetDef PySpaceFortressGame_getset[] = {
   {(char*)"thrust_flag", (getter)get_thrust_flag, NULL, NULL, NULL},
   {(char*)"turn_flag", (getter)get_turn_flag, NULL, NULL, NULL},
   {(char*)"events", (getter)get_events, NULL, NULL, NULL},
+  {(char*)"thrust_durations", (getter)get_thrust_durations, NULL, NULL, NULL},
+  {(char*)"shot_durations", (getter)get_shot_durations, NULL, NULL, NULL},
+  {(char*)"shot_intervals", (getter)get_shot_intervals, NULL, NULL, NULL},
   {(char*)"collisions", (getter)get_collisions, NULL, NULL, NULL},
   {(char*)"pb_pixels", (getter)get_pixels, NULL, NULL, NULL},
   {(char*)"pb_width", (getter)get_pixels_width, NULL, NULL, NULL},
   {(char*)"pb_height", (getter)get_pixels_height, NULL, NULL, NULL},
   {(char*)"stats", (getter)get_stats, NULL, NULL, NULL},
+  {(char*)"timers", (getter)get_timers, NULL, NULL, NULL},
   {NULL, NULL, NULL, NULL, NULL}
 };
 
