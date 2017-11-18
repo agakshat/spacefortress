@@ -47,7 +47,8 @@ typedef struct {
 } Collisions;
 
 typedef struct {
-  int mPoints, mRawPoints, mVulnerability;
+  float mPoints, mRawPoints;
+  int mVulnerability;
 } GameScore;
 
 typedef struct {
@@ -96,21 +97,22 @@ public:
   std::vector<std::string> mEvents;
   std::vector<int> mThrustDurations;
   std::vector<int> mShotDurations;
-  std::vector<int> mShotIntervals;
+  std::vector<int> mShotIntervalsInvul;
+  std::vector<int> mShotIntervalsVul;
 
 public:
   GameScore mScore;
   int mBonus;
   int mDestroyFortressExtraPoints;
-  int mReward;
+  float mReward;
 
   Game( Config *config );
   virtual ~Game();
 
   virtual void playSound( Sound s );
 
-  void reward(int amt);
-  void penalize(int amt);
+  void reward(float amt);
+  void penalize(float amt);
   void pressKey(KeySym sym);
   void releaseKey(KeySym sym);
   void addEvent( std::string s );

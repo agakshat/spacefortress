@@ -30,9 +30,9 @@ DEFGET(fortress_alive, "N", PyBool_FromLong(self->game->mFortress.mAlive));
 DEFGET(fortress_angle, "d", self->game->mFortress.mAngle);
 DEFGET(bighex, "i", self->game->mBighex.mRadius);
 DEFGET(smallhex, "i", self->game->mSmallhex.mRadius);
-DEFGET(points, "i", self->game->mScore.mPoints);
-DEFGET(max_points, "i", self->game->mConfig->getInt("maxPoints"));
-DEFGET(raw_points, "i", self->game->mScore.mRawPoints);
+DEFGET(points, "d", self->game->mScore.mPoints);
+DEFGET(max_points, "d", self->game->mConfig->getDouble("maxPoints"));
+DEFGET(raw_points, "d", self->game->mScore.mRawPoints);
 DEFGET(vulnerability, "i", self->game->mScore.mVulnerability);
 DEFGET(vulnerability_timer, "d", self->game->mFortress.mVulnerabilityTimer);
 DEFGET(vulnerability_time, "d", self->game->mConfig->getInt("fortressVulnerabilityTime"));
@@ -42,7 +42,7 @@ DEFGET(turn_flag, "i", self->game->mShip.mTurnFlag);
 
 static PyObject *
 get_stats(PySpaceFortressGameObject *self) {
-  return Py_BuildValue("iiiiiiiiiiiiiii",
+  return Py_BuildValue("iiiiiiiiiiiiidd",
     self->game->mStats.bigHexDeaths,
     self->game->mStats.smallHexDeaths,
     self->game->mStats.shellDeaths,
@@ -126,10 +126,19 @@ get_shot_durations(PySpaceFortressGameObject *self) {
 }
 
 static PyObject *
-get_shot_intervals(PySpaceFortressGameObject *self) {
-  PyObject* retval = PyTuple_New( self->game->mShotIntervals.size() );
-  for( size_t i=0; i < self->game->mShotIntervals.size(); i++ ) {
-    PyTuple_SET_ITEM( retval, i, Py_BuildValue("i", self->game->mShotIntervals[i] ));
+get_shot_intervals_invul(PySpaceFortressGameObject *self) {
+  PyObject* retval = PyTuple_New( self->game->mShotIntervalsInvul.size() );
+  for( size_t i=0; i < self->game->mShotIntervalsInvul.size(); i++ ) {
+    PyTuple_SET_ITEM( retval, i, Py_BuildValue("i", self->game->mShotIntervalsInvul[i] ));
+  }
+  return Py_BuildValue("O", retval);
+}
+
+static PyObject *
+get_shot_intervals_vul(PySpaceFortressGameObject *self) {
+  PyObject* retval = PyTuple_New( self->game->mShotIntervalsVul.size() );
+  for( size_t i=0; i < self->game->mShotIntervalsVul.size(); i++ ) {
+    PyTuple_SET_ITEM( retval, i, Py_BuildValue("i", self->game->mShotIntervalsVul[i] ));
   }
   return Py_BuildValue("O", retval);
 }
@@ -359,7 +368,8 @@ static PyGetSetDef PySpaceFortressGame_getset[] = {
   {(char*)"events", (getter)get_events, NULL, NULL, NULL},
   {(char*)"thrust_durations", (getter)get_thrust_durations, NULL, NULL, NULL},
   {(char*)"shot_durations", (getter)get_shot_durations, NULL, NULL, NULL},
-  {(char*)"shot_intervals", (getter)get_shot_intervals, NULL, NULL, NULL},
+  {(char*)"shot_intervals_invul", (getter)get_shot_intervals_invul, NULL, NULL, NULL},
+  {(char*)"shot_intervals_vul", (getter)get_shot_intervals_vul, NULL, NULL, NULL},
   {(char*)"collisions", (getter)get_collisions, NULL, NULL, NULL},
   {(char*)"pb_pixels", (getter)get_pixels, NULL, NULL, NULL},
   {(char*)"pb_width", (getter)get_pixels_width, NULL, NULL, NULL},

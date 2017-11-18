@@ -50,9 +50,10 @@ class SSFLogger(Callback):
 
     def get_durations(self):
         return [
-            np.nanmean(self.env.g.thrust_durations),
-            np.nanmean(self.env.g.shot_durations),
-            np.nanmean(self.env.g.shot_intervals)
+            np.nanmean(self.env.g.thrust_durations)*self.env.tickdur/1000,
+            np.nanmean(self.env.g.shot_durations)*self.env.tickdur/1000,
+            np.nanmean(self.env.g.shot_intervals_invul)*self.env.tickdur/1000,
+            np.nanmean(self.env.g.shot_intervals_vul)*self.env.tickdur/1000
             ]
 
     def on_train_begin(self, logs):
@@ -62,7 +63,7 @@ class SSFLogger(Callback):
                 "shellDeaths","shipDeaths","resets","destroyedFortresses",
                 "missedShots","totalShots","totalThrusts","totalLefts","totalRights",
                 "vlnerIncs","maxVlner","points","rawPoints",
-                "mean_thrust_duration","mean_shot_duration","mean_shot_interval"
+                "mean_thrust_duration","mean_shot_duration","mean_shot_interval_invul","mean_shot_interval_vul"
             ] + ["action%d_p" % (i) for i in xrange(len(self.env.actions_taken))] + self.model.metrics_names
             self.log.write("%s\n" % "\t".join(header))
             self.log.flush()
@@ -142,7 +143,7 @@ elif args.policy == "maxboltzmann":
     policy = MaxBoltzmannQPolicy(eps=args.eps_max, tau=args.tau_max)
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory,
-               nb_steps_warmup=EPISODES_IN_GAME, target_model_update=EPISODES_IN_GAME*2, policy=policy,
+               nb_steps_warmup=EPISODE_LENGTH, target_model_update=EPISODE_LENGTH, policy=policy,
                enable_double_dqn=True, enable_dueling_network=False,
                #gamma=.8,
                #delta_clip=10,
@@ -183,7 +184,7 @@ logger_cb = SSFLogger(dqn, logfile)
 dqn.training = True
 dqn.fit(env, action_repetition=args.frameskip, nb_steps=10000*EPISODE_LENGTH,
         visualize=args.visualize, verbose=2, callbacks=[logger_cb],
-        nb_max_start_steps=8)
+        nb_max_start_steps=env.metadata['video.frames_per_second']*3)
 # dqn.nb_steps_warmup = 0
 # # if dqn.policy.eps > .1:
 # #     dqn.policy.eps = dqn.policy.eps * .99

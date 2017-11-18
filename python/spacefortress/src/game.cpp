@@ -63,7 +63,8 @@ Game::Game( Config *config ) {
 
   mThrustDurations.clear();
   mShotDurations.clear();
-  mShotIntervals.clear();
+  mShotIntervalsInvul.clear();
+  mShotIntervalsVul.clear();
 
   mTick = 0;
   mTime = 0;
@@ -93,14 +94,14 @@ void Game::maybeResetKeyEvents() {
   }
 }
 
-void Game::reward(int amount) {
+void Game::reward(float amount) {
   mReward += amount;
   mScore.mRawPoints += amount;
   mScore.mPoints += amount;
   if( mScore.mPoints < 0 ) mScore.mPoints = 0;
 }
 
-void Game::penalize(int amount) {
+void Game::penalize(float amount) {
   reward( -amount );
 }
 
@@ -227,7 +228,10 @@ void Game::processKeyState() {
       } else if (mKeys.events[i].sym == FIRE_KEY && !mShip.mFireFlag) {
         fireMissile(mShip.mPos, mShip.mAngle);
         mShip.mFireFlag = true;
-        mShotIntervals.push_back( abs(mShip.mFireTimer) );
+        if (mScore.mVulnerability > 10)
+          mShotIntervalsVul.push_back( abs(mShip.mFireTimer) );
+        else
+          mShotIntervalsInvul.push_back( abs(mShip.mFireTimer) );
         mShip.mFireTimer = 0;
         mStats.totalShots += 1;
       }
@@ -352,7 +356,7 @@ void Game::updateMissiles() {
             if (mScore.mVulnerability < 11)
               reward( mScore.mVulnerability * mScore.mVulnerability );
             if (mScore.mVulnerability > 10)
-              penalize( 2 );
+              reward( .1 );
             addEvent("vlner-increased");
             mStats.vlnerIncs += 1;
             if (mScore.mVulnerability > mStats.maxVlner)
