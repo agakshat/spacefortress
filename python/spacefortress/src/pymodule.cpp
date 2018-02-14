@@ -302,10 +302,10 @@ PySpaceFortressGame_init(PySpaceFortressGameObject* self, PyObject* args, PyObje
     self->config = autoturnConfig();
   } else if( strcmp(config_name, "explode") == 0 ) {
     self->config = explodeConfig();
-  } else if( strcmp(config_name, "deep-autoturn") == 0 ) {
-    self->config = deepAutoturnConfig();
-  } else if( strcmp(config_name, "deep-explode") == 0 ) {
-    self->config = deepExplodeConfig();
+  // } else if( strcmp(config_name, "deep-autoturn") == 0 ) {
+  //   self->config = deepAutoturnConfig();
+  // } else if( strcmp(config_name, "deep-explode") == 0 ) {
+  //   self->config = deepExplodeConfig();
   } else {
     PyErr_Format(PyExc_RuntimeError, "cannot initialize %s. Unknown config value: `%s'", Py_TYPE(self)->tp_name, config_name);
     return -1;

@@ -47,11 +47,10 @@ class SSF_Env(gym.Env):
         'video.frames_per_second' : 30
     }
 
-    def __init__(self, gametype="deep-explode", scale=.2, viewport=(130,80,450,460), ls=3, action_set=0, continuous=False, obs_type='image'):
+    def __init__(self, gametype="deep-explode", scale=.2, viewport=(130,80,450,460), ls=3, action_set=1, obs_type='image'):
         assert obs_type in ('image', 'features', 'normalized-features', 'monitors')
         self.obs_type = obs_type
         self._seed()
-        self.continuous = continuous
         self.viewer = None
         self.last_action = None
         self.gametype = gametype
@@ -60,43 +59,35 @@ class SSF_Env(gym.Env):
         self.viewport = viewport
         self.ls = ls
         self.tickdur = int(np.ceil(1./self.metadata['video.frames_per_second']*1000))
+        self.action_set = action_set
 
-        if self.continuous:
-            if self.gametype in ["explode","deep-explode"]:
-                # Action is 3 floats [fire, thrust, turn].
-                # fire: -1..0 off, 0..+1 on
-                # thrust: -1..0 off, 0..+1 on
-                # turn:  -1.0..-0.5 left, +0.5..+1.0 right, -0.5..0.5 nothing
-                self.action_space = spaces.Box(-1, +1, (3,))
-            elif self.gametype in ["autoturn","deep-autoturn"]:
-                # Action is 2 floats [fire, thrust].
-                # fire: -1..0 off, 0..+1 on
-                # thrust: -1..0 off, 0..+1 on
-                self.action_space = spaces.Box(-1, +1, (2,))
-        else:
-            # 0=FIRE, 1=THRUST, 2=LEFT, 3=RIGHT
-            if self.gametype in ["explode","deep-explode"]:
-                if action_set == 0:
-                    self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
-                elif action_set == 1:
-                    self.action_combinations = np.array([
-                        [0, 0, 0, 0], # NOOP
-                        [1, 0, 0, 0], # FIRE
-                        [0, 1, 0, 0], # THRUST
-                        [0, 0, 1, 0], # LEFT
-                        [0, 0, 0, 1], # RIGHT
-                    ])
-            elif self.gametype in ["autoturn","deep-autoturn"]:
-                if action_set == 0:
-                    self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1])).T.reshape(-1,2)
-                elif action_set == 1:
-                    self.action_combinations = np.array([
-                        [0, 0], # NOOP
-                        [1, 0], # FIRE
-                        [0, 1], # THRUST
-                    ])
-            self.action_space = spaces.Discrete(len(self.action_combinations))
-            self.actions_taken = {i:0 for i in xrange(len(self.action_combinations))}
+        # 0=FIRE, 1=THRUST, 2=LEFT, 3=RIGHT
+        if self.gametype in ["explode","deep-explode"]:
+            if self.action_set == -1:
+                self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
+            elif self.action_set == 0:
+                self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
+            elif self.action_set == 1:
+                self.action_combinations = np.array([
+                    [0, 0, 0, 0], # NOOP
+                    [1, 0, 0, 0], # FIRE
+                    [0, 1, 0, 0], # THRUST
+                    [0, 0, 1, 0], # LEFT
+                    [0, 0, 0, 1], # RIGHT
+                ])
+        elif self.gametype in ["autoturn","deep-autoturn"]:
+            if self.action_set == -1:
+                self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
+            elif self.action_set == 0:
+                self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1])).T.reshape(-1,2)
+            elif self.action_set == 1:
+                self.action_combinations = np.array([
+                    [0, 0], # NOOP
+                    [1, 0], # FIRE
+                    [0, 1], # THRUST
+                ])
+        self.action_space = spaces.Discrete(len(self.action_combinations))
+        self.actions_taken = {i:0 for i in xrange(len(self.action_combinations))}
 
         self._reset()
 
@@ -177,11 +168,12 @@ class SSF_Env(gym.Env):
             self.observation_space = spaces.Box(low=0, high=255, shape=(self.g.pb_height, self.g.pb_width, 3))
             self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
             self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
-            return self.game_state
+            state = self.game_state
         else:
-            self.observation_space = spaces.Box(low=-1, high=1, shape=self._get_features().shape)
+            self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=self._get_features().shape)
             self.game_state = np.array([])
-            return self._get_features()
+            state = self._get_features()
+        return state
 
     def _render(self, mode='human', close=False):
         if close:
@@ -215,48 +207,25 @@ class SSF_Env(gym.Env):
         done = False
         reward = 0
         self.actions_taken[action] += 1
-        if self.continuous:
-            if action[0] > 0:
-                self.g.press_key(sf.FIRE_KEY)
-            else:
-                self.g.release_key(sf.FIRE_KEY)
-            if action[1] > 0:
-                self.g.press_key(sf.THRUST_KEY)
-            else:
-                self.g.release_key(sf.THRUST_KEY)
-            if self.gametype in ["explode","deep-explode"]:
-                if action[2] < -0.5:
-                    if self.last_action != None and self.last_action > 0.5:
-                        self.g.release_key(sf.RIGHT_KEY)
-                    self.g.press_key(sf.LEFT_KEY)
-                elif action[2] > 0.5:
-                    if self.last_action != None and self.last_action < -0.5:
-                        self.g.release_key(sf.LEFT_KEY)
-                    self.g.press_key(sf.RIGHT_KEY)
-                else:
-                    if self.last_action != None and self.last_action < -0.5:
-                        self.g.release_key(sf.LEFT_KEY)
-                    elif self.last_action != None and self.last_action > 0.5:
-                        self.g.release_key(sf.RIGHT_KEY)
+
+        keystate = self.action_combinations[action]
+        if keystate[0]:
+            self.g.press_key(sf.FIRE_KEY)
         else:
-            keystate = self.action_combinations[action]
-            if keystate[0]:
-                self.g.press_key(sf.FIRE_KEY)
+            self.g.release_key(sf.FIRE_KEY)
+        if keystate[1]:
+            self.g.press_key(sf.THRUST_KEY)
+        else:
+            self.g.release_key(sf.THRUST_KEY)
+        if self.gametype in ["explode","deep-explode"]:
+            if keystate[2]:
+                self.g.press_key(sf.LEFT_KEY)
             else:
-                self.g.release_key(sf.FIRE_KEY)
-            if keystate[1]:
-                self.g.press_key(sf.THRUST_KEY)
+                self.g.release_key(sf.LEFT_KEY)
+            if keystate[3]:
+                self.g.press_key(sf.RIGHT_KEY)
             else:
-                self.g.release_key(sf.THRUST_KEY)
-            if self.gametype in ["explode","deep-explode"]:
-                if keystate[2]:
-                    self.g.press_key(sf.LEFT_KEY)
-                else:
-                    self.g.release_key(sf.LEFT_KEY)
-                if keystate[3]:
-                    self.g.press_key(sf.RIGHT_KEY)
-                else:
-                    self.g.release_key(sf.RIGHT_KEY)
+                self.g.release_key(sf.RIGHT_KEY)
 
         reward = self.g.step_one_tick(self.tickdur)
         done = self.g.is_game_over()

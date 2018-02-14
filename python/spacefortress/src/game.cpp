@@ -353,10 +353,10 @@ void Game::updateMissiles() {
           if (mFortress.mVulnerabilityTimer >= mConfig->getInt("fortressVulnerabilityTime")) {
             playSound( VLNER_INCREASE_SOUND );
             mScore.mVulnerability += 1;
-            if (mScore.mVulnerability < 11)
-              reward( mScore.mVulnerability * mScore.mVulnerability );
-            if (mScore.mVulnerability > 10)
-              reward( .1 );
+            // if (mScore.mVulnerability < 11)
+            //   reward( mScore.mVulnerability * mScore.mVulnerability );
+            // if (mScore.mVulnerability > 10)
+            //   penalize( 2 );
             addEvent("vlner-increased");
             mStats.vlnerIncs += 1;
             if (mScore.mVulnerability > mStats.maxVlner)
@@ -372,7 +372,7 @@ void Game::updateMissiles() {
             } else {
               playSound( VLNER_RESET_SOUND );
               addEvent("vlner-reset");
-              penalize( mScore.mVulnerability+1 );
+              // penalize( mScore.mVulnerability+1 );
               mStats.resets += 1;
             }
             mScore.mVulnerability = 0;
@@ -383,7 +383,7 @@ void Game::updateMissiles() {
         }
       } else if (isOutsideGameArea(mMissiles[i].mPos)) {
         mMissiles[i].mAlive = false;
-        penalize( mConfig->getInt( "missPenalty" ));
+        // penalize( mConfig->getInt( "missPenalty" ));
         mStats.missedShots += 1;
       }
     }
@@ -400,7 +400,8 @@ void Game::updateShells() {
         mCollisions.shellShip = true;
         mShells[i].mAlive = false;
         killShip();
-        penalize(mConfig->getInt("shipDeathPenalty")/10);
+        // penalize(mConfig->getInt("shipDeathPenalty")/10);
+        penalize(mConfig->getInt("shipDeathPenalty"));
         mStats.shellDeaths += 1;
         addEvent("shell-hit-ship");
       } else if (isOutsideGameArea(mShells[i].mPos)) {

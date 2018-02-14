@@ -16,17 +16,19 @@ while (TRUE) {
     d = rbindlist(lapply(list.files(pattern="*.log"),function(x) {
       .d = fread(x)
       tokens = str_split(str_sub(x,end=-5),"_")[[1]]
-      .d[,model:=paste(tokens[4],tokens[11],sep="_")]
+      .d[,model:=paste(tokens[2],tokens[5],sep="_")]
       }),fill=TRUE)
+    d[,kill_death_ratio:=destroyedFortresses/(shipDeaths+1)]
     d[,model:=as.factor(model)]
-    d[,c("missedShots","totalLefts","totalRights"):=NULL]
+    #d[,c("missedShots","totalLefts","totalRights"):=NULL]
     #d[,c("action0_p","action1_p","action2_p"):=NULL]
     d[,c("mean_eps","mean_tau"):=NULL]
-    dd = melt(d[episode>0],id.vars=c("epoch","episode","training","model"))[!is.nan(value)]
-    dd[,epoch:=ceiling(episode/10)]
-    p = ggplot(dd[epoch>0,.(mean_value=mean(value),sd_value=sd(value)),by=c("model","variable","epoch")]) + 
-      geom_line(aes(x=as.numeric(epoch),y=mean_value,color=model),alpha=.8) + 
-      geom_ribbon(aes(x=as.numeric(epoch),ymin=mean_value-sd_value,ymax=mean_value+sd_value,fill=model),alpha=.4) + 
+    dd = melt(d[epoch>0],id.vars=c("epoch","episode","training","model"))[!is.nan(value)]
+    # dd[,epoch:=ceiling(episode/10)]
+    p = ggplot(dd) + 
+      geom_point(aes(x=as.numeric(epoch),y=value,color=model),alpha=.25,shape=20,size=1) + 
+      geom_smooth(aes(x=as.numeric(epoch),y=value,color=model,fill=model),se=FALSE,method="loess",size=1,span=.1) +
+      # geom_ribbon(aes(x=as.numeric(epoch),ymin=mean_value-sd_value,ymax=mean_value+sd_value,fill=model),alpha=.4) + 
       #geom_hline(aes(yintercept=threshold,color=name),data=thresholds) +
       facet_wrap(~variable,scales="free_y",ncol=4) +
       theme(legend.position="right") +

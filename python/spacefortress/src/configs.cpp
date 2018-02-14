@@ -80,23 +80,23 @@ Config *explodeConfig() {
   return c;
 }
 
-void deepConfig(Config *c) {
-  c->set("missilePenalty", 0);
-  c->set("missPenalty", 2);
-  c->set("incRewardInvulnerable", 5);
-  c->set("incRewardVulnerable", 0.5);
-  c->set("shipDeathPenalty", 1000);
-  c->set("destroyFortress", 10000);
-}
-
-Config *deepAutoturnConfig() {
-  Config *c = autoturnConfig();
-  deepConfig(c);
-  return c;
-}
-
-Config *deepExplodeConfig() {
-  Config *c = explodeConfig();
-  deepConfig(c);
-  return c;
-}
+// void deepConfig(Config *c) {
+//   c->set("missilePenalty", 0);
+//   c->set("missPenalty", 2);
+//   c->set("incRewardInvulnerable", 5);
+//   c->set("incRewardVulnerable", 0.5);
+//   c->set("shipDeathPenalty", 1000);
+//   c->set("destroyFortress", 10000);
+// }
+//
+// Config *deepAutoturnConfig() {
+//   Config *c = autoturnConfig();
+//   deepConfig(c);
+//   return c;
+// }
+//
+// Config *deepExplodeConfig() {
+//   Config *c = explodeConfig();
+//   deepConfig(c);
+//   return c;
+// }

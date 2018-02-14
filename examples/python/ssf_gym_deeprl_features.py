@@ -9,7 +9,7 @@ import numpy as np
 import gym
 
 from keras.models import Sequential
-from keras.layers import Dense, Activation, Flatten, ELU
+from keras.layers import Dense, Activation, Flatten, Dropout
 from keras.optimizers import Adadelta, Adam, Nadam, RMSprop
 from keras import backend as K
 
@@ -89,6 +89,7 @@ class SSFLogger(Callback):
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--game', choices=["deep-explode","deep-autoturn","explode","autoturn"], default="deep-explode")
+parser.add_argument('--action_set', type=int, default=1)
 parser.add_argument('--features', choices=["features","normalized-features","monitors"], default="normalized-features")
 parser.add_argument('--optimizer', choices=["adam","adadelta","nadam","rmsprop"], default="adam")
 parser.add_argument('--policy', choices=["epsgreedy","boltzmann","maxboltzmann"], default="epsgreedy")
@@ -97,22 +98,25 @@ parser.add_argument('--windowlength', type=int, default=4)
 parser.add_argument('--traininterval', type=int, default=4)
 parser.add_argument('--memoryinterval', type=int, default=2)
 parser.add_argument('--frameskip', type=int, default=2)
-parser.add_argument('--memorysize', type=int, default=200)
+parser.add_argument('--memorysize', type=int, default=500)
 parser.add_argument('--eps_max', type=float, default=.2)
 parser.add_argument('--eps_min', type=float, default=.01)
-parser.add_argument('--eps_test', type=float, default=.001)
+parser.add_argument('--eps_test', type=float, default=.0001)
 parser.add_argument('--tau_max', type=float, default=1)
 parser.add_argument('--tau_min', type=float, default=.01)
 parser.add_argument('--tau_test', type=float, default=.001)
 parser.add_argument('--annealgames', type=int, default=500)
+parser.add_argument('--ngames', type=int, default=1000)
+parser.add_argument('--nepochs', type=int, default=20)
+parser.add_argument('--seed', type=int, default=1234)
 parser.add_argument('--visualize', action='store_true')
 args = parser.parse_args()
 print(args.game)
 
 # Get the environment and extract the number of actions.
-env = SSF_Env(gametype=args.game, scale=.2, ls=2, obs_type=args.features, action_set=1)
-np.random.seed(999)
-env.seed(999)
+env = SSF_Env(gametype=args.game, scale=.2, ls=2, obs_type=args.features, action_set=args.action_set)
+np.random.seed(args.seed)
+env.seed(args.seed)
 nb_actions = env.action_space.n
 nb_features = env.observation_space.shape[0]
 
@@ -124,11 +128,11 @@ MEMSIZE = args.memorysize
 model = Sequential()
 model.add(Flatten(input_shape=(args.windowlength,) + env.observation_space.shape))
 model.add(Dense(64))
-model.add(Activation('relu'))
+model.add(Activation('elu'))
 model.add(Dense(64))
-model.add(Activation('relu'))
+model.add(Activation('elu'))
 model.add(Dense(64))
-model.add(Activation('relu'))
+model.add(Activation('elu'))
 model.add(Dense(nb_actions))
 model.add(Activation('linear'))
 print(model.summary())
@@ -142,6 +146,8 @@ elif args.policy == "boltzmann":
 elif args.policy == "maxboltzmann":
     policy = MaxBoltzmannQPolicy(eps=args.eps_max, tau=args.tau_max)
 
+policy = LinearAnnealedPolicy(policy, attr='eps', value_max=args.eps_max, value_min=args.eps_min, value_test=args.eps_test, nb_steps=EPISODE_LENGTH*args.annealgames)
+
 dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory,
                nb_steps_warmup=EPISODE_LENGTH, target_model_update=EPISODE_LENGTH, policy=policy,
                enable_double_dqn=True, enable_dueling_network=False,
@@ -150,28 +156,31 @@ dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory,
                processor = SSFProcessor(image=False),
                train_interval=args.traininterval, memory_interval=args.memoryinterval)
 
-if args.learningrate > 0:
+lr = args.learningrate
+
+if args.learningrate <= 0:
     if args.optimizer == "adam":
-        o = Adam(lr=args.learningrate)
+        lr = 1e-3
     elif args.optimizer == "nadam":
-        o = Nadam(lr=args.learningrate)
+        lr = 2e-3
     elif args.optimizer == "adadelta":
-        o = Adadelta(lr=args.learningrate)
+        lr = 1e0
     elif args.optimizer == "rmsprop":
-        o = RMSprop(lr=args.learningrate)
-else:
-    if args.optimizer == "adam":
-        o = Adam()
-    elif args.optimizer == "nadam":
-        o = Nadam()
-    elif args.optimizer == "adadelta":
-        o = Adadelta()
-    elif args.optimizer == "rmsprop":
-        o = RMSprop()
+        lr = 1e-3
+
+if args.optimizer == "adam":
+    o = Adam(lr=lr)
+elif args.optimizer == "nadam":
+    o = Nadam(lr=lr)
+elif args.optimizer == "adadelta":
+    o = Adadelta(lr=lr)
+elif args.optimizer == "rmsprop":
+    o = RMSprop(lr=lr)
+
 dqn.compile(o, metrics=['mae'])
 
 # Set some variables
-MODELNAME = "dqn_game:%s_obs:%s_pol:%s_opt:%s_lr:%.6f_wl:%d_ms:%d_fs:%d_ti:%d_mi:%d" % (args.game, env.obs_type, args.policy, args.optimizer, float(K.get_value(o.lr)), args.windowlength, args.memorysize, args.frameskip, args.traininterval, args.memoryinterval)
+MODELNAME = "dqn_game:%s_obs:%s_pol:%s_opt:%s_lr:%.6f_wl:%d_ms:%d_fs:%d_ti:%d_mi:%d_as:%d_seed:%d" % (args.game, env.obs_type, args.policy, args.optimizer, float(K.get_value(o.lr)), args.windowlength, args.memorysize, args.frameskip, args.traininterval, args.memoryinterval, args.action_set, args.seed)
 weightsfile = '%s.h5f' % (MODELNAME)
 logfile = '%s.log' % (MODELNAME)
 
@@ -180,15 +189,17 @@ if os.path.isfile(weightsfile):
 
 logger_cb = SSFLogger(dqn, logfile)
 
-#while True:
-dqn.training = True
-dqn.fit(env, action_repetition=args.frameskip, nb_steps=10000*EPISODE_LENGTH,
-        visualize=args.visualize, verbose=2, callbacks=[logger_cb],
-        nb_max_start_steps=env.metadata['video.frames_per_second']*3)
-# dqn.nb_steps_warmup = 0
-# # if dqn.policy.eps > .1:
-# #     dqn.policy.eps = dqn.policy.eps * .99
-# # if dqn.policy.tau > .01:
-# #     dqn.policy.tau = dqn.policy.tau * .999
-dqn.test(env, nb_episodes=1, visualize=args.visualize)#, callbacks=[logger_cb])
+for epoch in xrange(args.nepochs):
+    start_eps = dqn.policy.value_max
+    for _ in xrange(int(np.ceil(args.ngames/10))):
+        epoch_eps = dqn.policy.value_max
+        dqn.training = True
+        dqn.fit(env, action_repetition=args.frameskip, nb_steps=10*EPISODE_LENGTH,
+                visualize=args.visualize, verbose=2, callbacks=[logger_cb],
+                nb_max_start_steps=env.metadata['video.frames_per_second']*4)
+        dqn.nb_steps_warmup = 0
+        dqn.test(env, nb_episodes=1, visualize=args.visualize, callbacks=[logger_cb])
+        dqn.policy.value_max = epoch_eps * .99
+    dqn.policy.value_max = start_eps * .75
+
 dqn.save_weights(weightsfile, overwrite=True)
