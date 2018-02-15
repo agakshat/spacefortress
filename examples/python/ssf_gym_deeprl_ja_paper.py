@@ -1,5 +1,6 @@
 from __future__ import division
 
+import sys
 import os
 import warnings
 
@@ -35,6 +36,16 @@ class SSFProcessor(Processor):
 
     def process_reward(self, reward):
         return np.clip(reward, -1., 1.)
+
+def gen_mlp(input_shape, actions, nodes=64, layers=3, hidden_activation="relu", output_activation="linear"):
+    model = Sequential()
+    model.add(Flatten(input_shape=(WINDOWLENGTH,) + env.observation_space.shape))
+    for _ in range(layers):
+        model.add(Dense(nodes))
+        model.add(Activation(hidden_activation))
+    model.add(Dense(actions))
+    model.add(Activation(output_activation))
+    return model
 
 class SSFLogger(Callback):
 
@@ -97,8 +108,18 @@ class SSFLogger(Callback):
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--game', choices=["deep-explode","deep-autoturn","explode","autoturn"], default="deep-explode")
 parser.add_argument('--seed', type=int, default=1234)
+parser.add_argument('--mlp-hidden-units', type=int, default=64)
+parser.add_argument('--mlp-layers', type=int, default=3)
+parser.add_argument('--frameskip', type=int, default=2)
+parser.add_argument('--memskip', type=int, default=2)
 parser.add_argument('--visualize', action='store_true')
 args = parser.parse_args()
+
+WINDOWLENGTH = 4
+EPISODES_IN_GAME = 5294
+EPISODE_LENGTH = int(EPISODES_IN_GAME/args.frameskip)
+MEMSIZE = 1000000
+NSTEPS = 100000
 
 # Get the environment and extract the number of actions.
 env = SSF_Env(gametype=args.game, scale=.2, ls=2, obs_type="features", action_set=1)
@@ -106,30 +127,10 @@ np.random.seed(args.seed)
 env.seed(args.seed)
 nb_actions = env.action_space.n
 nb_features = env.observation_space.shape[0]
-
-WINDOWLENGTH = 4
-FRAMESKIP = 2
-
-EPISODES_IN_GAME = 5294
-EPISODE_LENGTH = int(EPISODES_IN_GAME/FRAMESKIP)
-MEMSIZE = 1000000
-NSTEPS = 100*EPISODE_LENGTH
+input_shape = (WINDOWLENGTH,) + env.observation_space.shape
 
 # Next, we build a very simple model.
-model = Sequential()
-model.add(Flatten(input_shape=(WINDOWLENGTH,) + env.observation_space.shape))
-model.add(Dense(128))
-model.add(Activation('relu'))
-model.add(Dense(128))
-model.add(Activation('relu'))
-model.add(Dense(128))
-model.add(Activation('relu'))
-model.add(Dense(128))
-model.add(Activation('relu'))
-model.add(Dense(128))
-model.add(Activation('relu'))
-model.add(Dense(nb_actions))
-model.add(Activation('linear'))
+model = gen_mlp(input_shape, nb_actions)
 print(model.summary())
 
 memory = SequentialMemory(limit=MEMSIZE, window_length=WINDOWLENGTH)
@@ -137,11 +138,13 @@ memory = SequentialMemory(limit=MEMSIZE, window_length=WINDOWLENGTH)
 eps_start = 1
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory,
-               nb_steps_warmup=EPISODE_LENGTH, target_model_update=EPISODE_LENGTH/8,
+               nb_steps_warmup=EPISODE_LENGTH,
+               target_model_update=int(env.metadata['video.frames_per_second']/args.frameskip*10),
+               train_interval=1,
                enable_double_dqn=False, enable_dueling_network=False,
                processor = SSFProcessor(image=False),
                batch_size=32,  gamma=.999999, delta_clip=1.,
-               train_interval=4, memory_interval=2)
+               memory_interval=args.memskip)
 
 dqn.compile(RMSprop(), metrics=['mae'])
 
@@ -166,11 +169,11 @@ for i in range(100):
     else:
         dqn.policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.1, value_min=.1, value_test=.1, nb_steps=NSTEPS)
     dqn.training = True
-    dqn.fit(env, action_repetition=FRAMESKIP, nb_steps=NSTEPS,
+    dqn.fit(env, action_repetition=args.frameskip, nb_steps=NSTEPS,
             visualize=args.visualize, verbose=2, callbacks=[logger_cb],
             nb_max_start_steps=env.metadata['video.frames_per_second']*4)
     dqn.policy = test_policy
     dqn.test_policy = test_policy
-    dqn.test(env, nb_episodes=1, visualize=True, callbacks=[logger_cb])
+    dqn.test(env, nb_episodes=10, visualize=True, callbacks=[logger_cb])
     dqn.nb_steps_warmup = 0
     dqn.save_weights(weightsfile, overwrite=True)
