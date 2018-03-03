@@ -106,7 +106,7 @@ class SSFLogger(Callback):
             self.metrics[episode].append(logs['metrics'])
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--game', choices=["deep-explode","deep-autoturn","explode","autoturn"], default="deep-explode")
+parser.add_argument('--game', choices=["deep-explode","deep-autoturn","explode","autoturn"], default="explode")
 parser.add_argument('--seed', type=int, default=1234)
 parser.add_argument('--mlp-hidden-units', type=int, default=64)
 parser.add_argument('--mlp-layers', type=int, default=3)

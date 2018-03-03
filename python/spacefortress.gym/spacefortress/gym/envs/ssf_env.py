@@ -227,7 +227,7 @@ class SSF_Env(gym.Env):
             else:
                 self.g.release_key(sf.RIGHT_KEY)
 
-        reward = self.g.step_one_tick(self.tickdur)
+        reward = self.g.step_one_tick(self.tickdur) + self.g.vulnerability
         done = self.g.is_game_over()
         self.last_action = action
         if self.obs_type == 'image':
