@@ -67,7 +67,7 @@ Config *autoturnConfig() {
   Config *c = new Config;
   baseConfig(c);
   c->set("autoTurn", true);
-  c->set("gameTime", 180000);
+  c->set("gameTime", 18000);
   c->set("maxPoints", 3748);
   return c;
 }
@@ -75,7 +75,7 @@ Config *autoturnConfig() {
 Config *explodeConfig() {
   Config *c = new Config;
   baseConfig(c);
-  c->set("gameTime", 180000);
+  c->set("gameTime", 18000);
   c->set("maxPoints", 3748);
   return c;
 }
