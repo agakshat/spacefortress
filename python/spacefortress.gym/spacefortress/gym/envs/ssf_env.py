@@ -87,7 +87,7 @@ class SSF_Env(gym.Env):
                     [0, 1], # THRUST
                 ])
         self.action_space = spaces.Discrete(len(self.action_combinations))
-        self.actions_taken = {i:0 for i in xrange(len(self.action_combinations))}
+        self.actions_taken = {i:0 for i in range(len(self.action_combinations))}
 
         self._reset()
 
@@ -166,7 +166,8 @@ class SSF_Env(gym.Env):
         self.g.draw()
         if self.obs_type == 'image':
             self.observation_space = spaces.Box(low=0, high=255, shape=(self.g.pb_height, self.g.pb_width, 3))
-            self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
+
+            self.game_state = cv2.cvtColor(np.asarray(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
             self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
             state = self.game_state
         else:
