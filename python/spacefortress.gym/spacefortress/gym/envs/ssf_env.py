@@ -165,13 +165,13 @@ class SSF_Env(gym.Env):
         self.raw_pixels = self.g.pb_pixels
         self.g.draw()
         if self.obs_type == 'image':
-            self.observation_space = spaces.Box(low=0, high=255, shape=(self.g.pb_height, self.g.pb_width, 3))
+            self.observation_space = spaces.Box(low=0, high=255, shape=(self.g.pb_height, self.g.pb_width, 3),dtype=np.uint8)
 
             self.game_state = cv2.cvtColor(np.asarray(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
             self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
             state = self.game_state
         else:
-            self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=self._get_features().shape)
+            self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=self._get_features().shape,dtype=np.uint8)
             self.game_state = np.array([])
             state = self._get_features()
         return state
@@ -188,7 +188,7 @@ class SSF_Env(gym.Env):
 
         if self.obs_type != 'image' and self.game_state.shape == (0,):
             self.g.draw()
-            self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
+            self.game_state = cv2.cvtColor(np.asarray(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
             self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
 
         self.viewer.imshow(self.game_state)
@@ -201,7 +201,7 @@ class SSF_Env(gym.Env):
 
     def _draw(self):
         self.g.draw()
-        self.game_state = cv2.cvtColor(np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
+        self.game_state = cv2.cvtColor(np.asarray(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
         self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
 
     def _step(self, action):
