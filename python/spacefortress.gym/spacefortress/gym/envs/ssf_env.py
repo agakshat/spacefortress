@@ -11,7 +11,7 @@ import os, platform
 
 import logging
 logger = logging.getLogger(__name__)
-
+import copy
 import cv2
 import spacefortress.core as sf
 
@@ -88,7 +88,7 @@ class SSF_Env(gym.Env):
                 ])
         self.action_space = spaces.Discrete(len(self.action_combinations))
         self.actions_taken = {i:0 for i in range(len(self.action_combinations))}
-
+        self.prev_vlner = 0
         self._reset()
 
     def _get_features(self):
@@ -208,7 +208,6 @@ class SSF_Env(gym.Env):
         done = False
         reward = 0
         self.actions_taken[action] += 1
-
         keystate = self.action_combinations[action]
         if keystate[0]:
             self.g.press_key(sf.FIRE_KEY)
@@ -227,8 +226,10 @@ class SSF_Env(gym.Env):
                 self.g.press_key(sf.RIGHT_KEY)
             else:
                 self.g.release_key(sf.RIGHT_KEY)
-
-        reward = self.g.step_one_tick(self.tickdur) + self.g.vulnerability
+        reward = self.g.step_one_tick(self.tickdur)
+        vlner_change = self.g.vulnerability - self.prev_vlner
+        reward += 10*vlner_change
+        self.prev_vlner = copy.deepcopy(self.g.vulnerability)
         done = self.g.is_game_over()
         self.last_action = action
         if self.obs_type == 'image':
