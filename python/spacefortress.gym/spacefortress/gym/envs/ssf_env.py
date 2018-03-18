@@ -234,7 +234,7 @@ class SSF_Env(gym.Env):
         self.last_action = action
         if self.obs_type == 'image':
             self._draw()
-            return self.game_state, reward, done, {}
+            return self.game_state, reward, done, reward>100
         else:
             self.game_state = np.array([])
             return self._get_features(), reward, done, {}
