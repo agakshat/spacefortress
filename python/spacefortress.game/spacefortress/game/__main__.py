@@ -9,7 +9,7 @@ def main(args=None):
         args = sys.argv[1:]
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--game', choices=["explode","autoturn","deep-explode","deep-autoturn"], default="explode")
+    parser.add_argument('--game', choices=["explode","autoturn","deep-explode","deep-autoturn","slow-autoturn","slow-explode"], default="explode")
     parser.add_argument('--video', type=str, default=None)
     args = parser.parse_args(args)
     args.game = args.game

@@ -27,3 +27,17 @@ register(
 	kwargs={ 'gametype': 'autoturn', 'obs_type': 'features' },
 	nondeterministic=False
 )
+
+register(
+	id='SpaceFortress-slowautoturn-image-v0',
+	entry_point='spacefortress.gym.envs:SSF_Env',
+	kwargs={ 'gametype': 'slow-autoturn', 'obs_type': 'image' },
+	nondeterministic=False
+)
+
+register(
+	id='SpaceFortress-slowexplode-image-v0',
+	entry_point='spacefortress.gym.envs:SSF_Env',
+	kwargs={ 'gametype': 'slow-explode', 'obs_type': 'image' },
+	nondeterministic=False
+)

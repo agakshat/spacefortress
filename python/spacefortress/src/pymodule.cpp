@@ -302,6 +302,10 @@ PySpaceFortressGame_init(PySpaceFortressGameObject* self, PyObject* args, PyObje
     self->config = autoturnConfig();
   } else if( strcmp(config_name, "explode") == 0 ) {
     self->config = explodeConfig();
+  } else if (strcmp(config_name, "slow-autoturn") == 0 ) {
+    self->config = slowautoturnConfig();
+  } else if (strcmp(config_name, "slow-explode") == 0 ) {
+    self->config = slowexplodeConfig();
   // } else if( strcmp(config_name, "deep-autoturn") == 0 ) {
   //   self->config = deepAutoturnConfig();
   // } else if( strcmp(config_name, "deep-explode") == 0 ) {

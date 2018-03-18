@@ -6,3 +6,5 @@ Config *autoturnConfig();
 Config *explodeConfig();
 Config *deepAutoturnConfig();
 Config *deepExplodeConfig();
+Config *slowautoturnConfig();
+Config *slowexplodeConfig();

@@ -383,7 +383,7 @@ void Game::updateMissiles() {
         }
       } else if (isOutsideGameArea(mMissiles[i].mPos)) {
         mMissiles[i].mAlive = false;
-        // penalize( mConfig->getInt( "missPenalty" ));
+        penalize( mConfig->getInt( "missPenalty" ));
         mStats.missedShots += 1;
       }
     }

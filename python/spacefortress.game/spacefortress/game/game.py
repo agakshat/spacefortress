@@ -44,7 +44,7 @@ class SSF_Game(pyglet.app.EventLoop):
 
     def on_draw(self):
         self.g.draw()
-        self.game_state = np.fromstring(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4)
+        self.game_state = np.asarray(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4)
         if self.encoder:
             self.encoder.capture_frame(self.game_state)
         image = pyglet.image.ImageData(self.w, self.h, 'BGRA', self.game_state.tobytes(), pitch=self.w * -4)
@@ -82,6 +82,8 @@ class SSF_Game(pyglet.app.EventLoop):
         self.exit()
 
     def update(self, dt):
-        self.g.step_one_tick(int(np.round(dt*1000)))
+        r = self.g.step_one_tick(int(np.round(dt*1000)))
+        if r!=0:
+            print("Reward: {}",r)
         if self.g.is_game_over():
             self.cleanup()

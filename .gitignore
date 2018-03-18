@@ -4,3 +4,6 @@
 *.dylib
 *~
 .fuse*
+*egg-info
+*.log
+*.mp4
