@@ -41,3 +41,17 @@ register(
 	kwargs={ 'gametype': 'slow-explode', 'obs_type': 'image' },
 	nondeterministic=False
 )
+
+register(
+	id='SpaceFortress-nopenaltyexplode-image-v0',
+	entry_point='spacefortress.gym.envs:SSF_Env',
+	kwargs={ 'gametype': 'nopenalty-explode', 'obs_type': 'image' },
+	nondeterministic=False
+)
+
+register(
+	id='SpaceFortress-nopenaltyautoturn-image-v0',
+	entry_point='spacefortress.gym.envs:SSF_Env',
+	kwargs={ 'gametype': 'nopenalty-autoturn', 'obs_type': 'image' },
+	nondeterministic=False
+)
