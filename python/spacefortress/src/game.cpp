@@ -132,11 +132,20 @@ bool Game::isOutsideGameArea(const Vector &p) {
 
 void Game::resetShip() {
   mShip.mAlive = true;
-  mShip.mPos.mX = mConfig->getDouble("shipStartX");
-  mShip.mPos.mY = mConfig->getDouble("shipStartY");
+  bool flag = true;
+  while (flag){
+    mShip.mPos.mX = rand()%380 + 170;
+    mShip.mPos.mY = rand()%330 + 150;
+    if (mBighex.isInside(mShip.mPos) && !mSmallhex.isInside(mShip.mPos)){
+      flag = false;
+    } 
+  }
+  //mShip.mPos.mX = mConfig->getDouble("shipStartX");
+  //mShip.mPos.mY = mConfig->getDouble("shipStartY");
   mShip.mVel.mX = mConfig->getDouble("shipStartVelX");
   mShip.mVel.mY = mConfig->getDouble("shipStartVelY");
-  mShip.mAngle = mConfig->getDouble("shipStartAngle");
+  //mShip.mAngle = mConfig->getDouble("shipStartAngle");
+  mShip.mAngle = rand()%360;
 }
 
 void Game::monitorShipRespawn() {
