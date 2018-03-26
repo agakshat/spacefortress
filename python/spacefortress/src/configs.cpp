@@ -72,11 +72,31 @@ Config *autoturnConfig() {
   return c;
 }
 
+Config *nopenaltyautoturnConfig() {
+  Config *c = new Config;
+  baseConfig(c);
+  c->set("autoTurn", true);
+  c->set("gameTime", 180000);
+  c->set("maxPoints", 3748);
+  c->set("missilePenalty", 0);
+  return c;
+}
+
 Config *explodeConfig() {
   Config *c = new Config;
   baseConfig(c);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
+  return c;
+}
+
+Config *nopenaltyexplodeConfig() {
+  Config *c = new Config;
+  baseConfig(c);
+  c->set("gameTime", 180000);
+  c->set("maxPoints", 3748);
+  c->set("missilePenalty", 0);
+  c->set("missPenalty",5);
   return c;
 }
 

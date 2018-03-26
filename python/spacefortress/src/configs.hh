@@ -8,3 +8,5 @@ Config *deepAutoturnConfig();
 Config *deepExplodeConfig();
 Config *slowautoturnConfig();
 Config *slowexplodeConfig();
+Config *nopenaltyautoturnConfig();
+Config *nopenaltyexplodeConfig();
