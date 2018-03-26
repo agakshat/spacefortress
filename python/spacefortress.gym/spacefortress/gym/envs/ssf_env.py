@@ -62,7 +62,7 @@ class SSF_Env(gym.Env):
         self.action_set = action_set
 
         # 0=FIRE, 1=THRUST, 2=LEFT, 3=RIGHT
-        if self.gametype in ["explode","deep-explode","slow-explode"]:
+        if self.gametype in ["explode","deep-explode","slow-explode","nopenalty-explode"]:
             if self.action_set == -1:
                 self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
             elif self.action_set == 0:
@@ -75,7 +75,7 @@ class SSF_Env(gym.Env):
                     [0, 0, 1, 0], # LEFT
                     [0, 0, 0, 1], # RIGHT
                 ])
-        elif self.gametype in ["autoturn","deep-autoturn","slow-autoturn"]:
+        elif self.gametype in ["autoturn","deep-autoturn","slow-autoturn","nopenalty-autoturn"]:
             if self.action_set == -1:
                 self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
             elif self.action_set == 0:
