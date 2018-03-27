@@ -84,6 +84,6 @@ class SSF_Game(pyglet.app.EventLoop):
     def update(self, dt):
         r = self.g.step_one_tick(int(np.round(dt*1000)))
         if r!=0:
-            print("Reward: {}",r)
+            print("Reward: {} | Vlner: {}".format(r,self.g.vulnerability))
         if self.g.is_game_over():
             self.cleanup()

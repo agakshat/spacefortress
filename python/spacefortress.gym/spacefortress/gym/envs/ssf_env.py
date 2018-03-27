@@ -228,7 +228,8 @@ class SSF_Env(gym.Env):
                 self.g.release_key(sf.RIGHT_KEY)
         reward = self.g.step_one_tick(self.tickdur)
         vlner_change = self.g.vulnerability - self.prev_vlner
-        reward += 10*vlner_change
+        if self.g.vulnerability<=10:
+            reward += 10*vlner_change
         self.prev_vlner = copy.deepcopy(self.g.vulnerability)
         done = self.g.is_game_over()
         self.last_action = action
