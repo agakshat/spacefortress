@@ -233,7 +233,7 @@ class SSF_Env(gym.Env):
             reward += 10*vlner_change
         self.prev_vlner = copy.deepcopy(self.g.vulnerability)
 
-        if self.explode and self.g.time%100==0:
+        if self.explode and self.g.time%1000==0:
             reward += 1
 
         done = self.g.is_game_over()

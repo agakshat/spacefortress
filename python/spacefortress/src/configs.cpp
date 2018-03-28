@@ -24,6 +24,8 @@ void baseConfig(Config *c) {
   c->set("autoTurn", false);
   c->set("staircase", false);
   c->set("fortressPointsPerContraction", 10);
+
+  c->set("turningReward", 0);
   // Fortress
   c->set("fortressSectorSize", 10);
   c->set("fortressLockTime", 1000);
@@ -88,6 +90,7 @@ Config *testexplodeConfig() {
   c->set("destroyFortress", 100);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
+  c->set("turningReward", 1);
   return c;
 }
 
@@ -106,6 +109,7 @@ Config *explodeConfig() {
   baseConfig(c);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
+  c->set("turningReward", 1);
   return c;
 }
 
@@ -116,6 +120,7 @@ Config *nopenaltyexplodeConfig() {
   c->set("maxPoints", 3748);
   c->set("missilePenalty", 0);
   c->set("missPenalty", 0);
+  c->set("turningReward", 1);
   return c;
 }
 
@@ -138,6 +143,7 @@ Config *slowexplodeConfig() {
   c->set("missilePenalty",2);
   c->set("missPenalty",5);
   c->set("shellSpeed",2);
+  c->set("turningReward", 1);
   return c;
 } 
 

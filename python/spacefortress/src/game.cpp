@@ -313,6 +313,8 @@ void Game::computeExtra() {
 
 void Game::updateShip() {
   if (mShip.mAlive) {
+    double currentAngle = mShip.mAngle;
+    double desiredAngle = stdAngle(ceil(angleTo(mShip.mPos, mFortress.mPos)));
     if (mConfig->getInt("autoTurn")) {
       mShip.mAngle = stdAngle(ceil(angleTo(mShip.mPos, mFortress.mPos)));
     } else {
@@ -344,6 +346,12 @@ void Game::updateShip() {
       mStats.smallHexDeaths += 1;
       mCollisions.smallHex = true;
       addEvent("explode-smallhex");
+    }
+
+    if (abs(mShip.mAngle-desiredAngle)<10 && abs(currentAngle-desiredAngle)>10) {
+      reward(mConfig->getInt("turningReward"));
+    } else if (abs(mShip.mAngle-desiredAngle)>10 && abs(currentAngle-desiredAngle)<10) {
+      penalize(mConfig->getInt("turningReward"));
     }
   }
 }
