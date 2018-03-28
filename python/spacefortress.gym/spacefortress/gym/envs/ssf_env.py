@@ -60,9 +60,10 @@ class SSF_Env(gym.Env):
         self.ls = ls
         self.tickdur = int(np.ceil(1./self.metadata['video.frames_per_second']*1000))
         self.action_set = action_set
-
+        self.explode = False
         # 0=FIRE, 1=THRUST, 2=LEFT, 3=RIGHT
         if self.gametype in ["explode","deep-explode","slow-explode","nopenalty-explode","test-explode"]:
+            self.explode = True
             if self.action_set == -1:
                 self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
             elif self.action_set == 0:
@@ -231,6 +232,10 @@ class SSF_Env(gym.Env):
         if self.g.vulnerability<=10:
             reward += 10*vlner_change
         self.prev_vlner = copy.deepcopy(self.g.vulnerability)
+
+        if self.explode and self.g.time%100==0:
+            reward += 1
+
         done = self.g.is_game_over()
         self.last_action = action
         if self.obs_type == 'image':
