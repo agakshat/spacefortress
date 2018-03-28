@@ -228,19 +228,20 @@ class SSF_Env(gym.Env):
             else:
                 self.g.release_key(sf.RIGHT_KEY)
         reward = self.g.step_one_tick(self.tickdur)
+        info = reward>2
         vlner_change = self.g.vulnerability - self.prev_vlner
-        if self.g.vulnerability<=10:
-            reward += 10*vlner_change
+        if self.g.vulnerability<=10 and not info:
+            reward += 2*vlner_change
         self.prev_vlner = copy.deepcopy(self.g.vulnerability)
 
-        if self.explode and self.g.time%1000==0:
-            reward += 1
+        #if self.explode and self.g.time%1000==0:
+        #    reward += 1
 
         done = self.g.is_game_over()
         self.last_action = action
         if self.obs_type == 'image':
             self._draw()
-            return self.game_state, reward, done, reward>100
+            return self.game_state, reward, done, info
         else:
             self.game_state = np.array([])
             return self._get_features(), reward, done, {}

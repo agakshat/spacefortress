@@ -91,6 +91,8 @@ Config *testexplodeConfig() {
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
   c->set("turningReward", 1);
+  c->set("shipDeathPenalty", 2);
+  c->set("destroyFortress", 3);
   return c;
 }
 
@@ -110,6 +112,8 @@ Config *explodeConfig() {
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
   c->set("turningReward", 1);
+  c->set("shipDeathPenalty", 2);
+  c->set("destroyFortress", 3);
   return c;
 }
 
@@ -121,6 +125,8 @@ Config *nopenaltyexplodeConfig() {
   c->set("missilePenalty", 0);
   c->set("missPenalty", 0);
   c->set("turningReward", 1);
+  c->set("shipDeathPenalty", 2);
+  c->set("destroyFortress", 3);
   return c;
 }
 
@@ -144,6 +150,8 @@ Config *slowexplodeConfig() {
   c->set("missPenalty",5);
   c->set("shellSpeed",2);
   c->set("turningReward", 1);
+  c->set("shipDeathPenalty", 2);
+  c->set("destroyFortress", 3);
   return c;
 } 
 
