@@ -72,6 +72,25 @@ Config *autoturnConfig() {
   return c;
 }
 
+Config *testautoturnConfig() {
+  Config *c = new Config;
+  baseConfig(c);
+  c->set("autoTurn", true);
+  c->set("destroyFortress", 100);
+  c->set("gameTime", 180000);
+  c->set("maxPoints", 3748);
+  return c;
+}
+
+Config *testexplodeConfig() {
+  Config *c = new Config;
+  baseConfig(c);
+  c->set("destroyFortress", 100);
+  c->set("gameTime", 180000);
+  c->set("maxPoints", 3748);
+  return c;
+}
+
 Config *nopenaltyautoturnConfig() {
   Config *c = new Config;
   baseConfig(c);
@@ -121,6 +140,8 @@ Config *slowexplodeConfig() {
   c->set("shellSpeed",2);
   return c;
 } 
+
+
 
 // void deepConfig(Config *c) {
 //   c->set("missilePenalty", 0);

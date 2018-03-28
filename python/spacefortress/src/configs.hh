@@ -10,3 +10,5 @@ Config *slowautoturnConfig();
 Config *slowexplodeConfig();
 Config *nopenaltyautoturnConfig();
 Config *nopenaltyexplodeConfig();
+Config *testautoturnConfig();
+Config *testexplodeConfig();
