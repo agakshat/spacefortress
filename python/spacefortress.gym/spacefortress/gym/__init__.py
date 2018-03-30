@@ -57,15 +57,15 @@ register(
 )
 
 register(
-	id='SpaceFortress-testautoturn-image-v0',
-	entry_point='spacefortress.gym.envs:SSF_Env',
-	kwargs={ 'gametype': 'test-autoturn', 'obs_type': 'image' },
+	id='SpaceFortress-testexplode-image-v0',
+	entry_point='spacefortress.gym.envs:SSF_Env_Test',
+	kwargs={ 'gametype': 'explode', 'obs_type': 'image' },
 	nondeterministic=False
 )
 
 register(
-	id='SpaceFortress-testexplode-image-v0',
-	entry_point='spacefortress.gym.envs:SSF_Env',
-	kwargs={ 'gametype': 'test-explode', 'obs_type': 'image' },
+	id='SpaceFortress-testautoturn-image-v0',
+	entry_point='spacefortress.gym.envs:SSF_Env_Test',
+	kwargs={ 'gametype': 'autoturn', 'obs_type': 'image' },
 	nondeterministic=False
 )
