@@ -50,7 +50,7 @@ class SSF_Env(gym.Env):
     def __init__(self, gametype="deep-explode", scale=.2, viewport=(130,80,450,460), ls=3, action_set=1, obs_type='image'):
         assert obs_type in ('image', 'features', 'normalized-features', 'monitors')
         self.obs_type = obs_type
-        self._seed()
+        self.seed()
         self.viewer = None
         self.last_action = None
         self.gametype = gametype
@@ -90,7 +90,7 @@ class SSF_Env(gym.Env):
         self.action_space = spaces.Discrete(len(self.action_combinations))
         self.actions_taken = {i:0 for i in range(len(self.action_combinations))}
         self.prev_vlner = 0
-        self._reset()
+        self.reset()
 
     def _get_features(self):
         if self.obs_type == 'monitors':
@@ -156,11 +156,11 @@ class SSF_Env(gym.Env):
             f = f + list(t)
             return np.array(f)
 
-    def _seed(self, seed=None):
+    def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def _reset(self):
+    def reset(self):
         self.g = sf.Game(self.gametype, width=self.w, height=self.h, viewport=self.viewport, lw=self.ls, grayscale=True)
         self.max_ticks = np.floor(self.g.max_time / self.tickdur)
         self.raw_pixels = self.g.pb_pixels
@@ -177,7 +177,7 @@ class SSF_Env(gym.Env):
             state = self._get_features()
         return state
 
-    def _render(self, mode='human', close=False):
+    def render(self, mode='human', close=False):
         if close:
             if self.viewer is not None:
                 self.viewer.close()
@@ -205,7 +205,7 @@ class SSF_Env(gym.Env):
         self.game_state = cv2.cvtColor(np.asarray(self.raw_pixels, np.uint8).reshape(self.h, self.w, 4), cv2.COLOR_RGBA2GRAY)
         self.game_gray_rgb = cv2.cvtColor(self.game_state,cv2.COLOR_GRAY2RGB)
 
-    def _step(self, action):
+    def step(self, action):
         done = False
         reward = 0
         self.actions_taken[action] += 1
@@ -228,19 +228,21 @@ class SSF_Env(gym.Env):
             else:
                 self.g.release_key(sf.RIGHT_KEY)
         reward = self.g.step_one_tick(self.tickdur)
-        info = reward > 100
+        fort_kill = reward > 100
         vlner_change = self.g.vulnerability - self.prev_vlner
-        if self.g.vulnerability<=10 and not info:
+        if self.g.vulnerability<=10 and not fort_kill:
             reward += 10*vlner_change
+        reward = self.sign(reward)
+        reward = reward + 2*fort_kill
         self.prev_vlner = copy.deepcopy(self.g.vulnerability)
         done = self.g.is_game_over()
         self.last_action = action
         if self.obs_type == 'image':
             self._draw()
-            return self.game_state, self.sign(reward), done, info
+            return self.game_state, reward, done, fort_kill
         else:
             self.game_state = np.array([])
-            return self._get_features(), self.sign(reward), done, {}
+            return self._get_features(), reward, done, {}
 
     def sign(self,x):
         if x==0: 
