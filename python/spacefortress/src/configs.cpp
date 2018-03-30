@@ -110,8 +110,6 @@ Config *explodeConfig() {
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
   c->set("turningReward", 1);
-  c->set("shipDeathPenalty", 2);
-  c->set("destroyFortress", 3);
   return c;
 }
 
