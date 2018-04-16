@@ -349,7 +349,7 @@ void Game::updateShip() {
     }
 
     if (abs(mShip.mAngle-desiredAngle)<10 && abs(currentAngle-desiredAngle)>10) {
-      reward(mConfig->getInt("turningReward"));
+      reward(mConfig->getDouble("turningReward"));
     } else if (abs(mShip.mAngle-desiredAngle)>10 && abs(currentAngle-desiredAngle)<10) {
       //penalize(mConfig->getInt("turningReward"));
     }
