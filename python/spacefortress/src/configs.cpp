@@ -12,7 +12,7 @@ void baseConfig(Config *c) {
   c->set("incRewardInvulnerable", 0);
   c->set("incRewardVulnerable", 0);
 
-  c->set("maxPoints", 1249);
+  c->set("maxPoints", 3748);
   c->set("maxBonus", 90);
 
   c->set("shellSpeed", 6);
@@ -84,16 +84,6 @@ Config *testautoturnConfig() {
   return c;
 }
 
-Config *testexplodeConfig() {
-  Config *c = new Config;
-  baseConfig(c);
-  c->set("destroyFortress", 100);
-  c->set("gameTime", 180000);
-  c->set("maxPoints", 3748);
-  c->set("turningReward", 0.0);
-  return c;
-}
-
 Config *nopenaltyautoturnConfig() {
   Config *c = new Config;
   baseConfig(c);
@@ -101,26 +91,6 @@ Config *nopenaltyautoturnConfig() {
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
   c->set("missilePenalty", 0);
-  return c;
-}
-
-Config *explodeConfig() {
-  Config *c = new Config;
-  baseConfig(c);
-  c->set("gameTime", 180000);
-  c->set("maxPoints", 3748);
-  c->set("turningReward", 0.5);
-  return c;
-}
-
-Config *nopenaltyexplodeConfig() {
-  Config *c = new Config;
-  baseConfig(c);
-  c->set("gameTime", 180000);
-  c->set("maxPoints", 3748);
-  c->set("missilePenalty", 0);
-  c->set("missPenalty", 0);
-  c->set("turningReward", 0.5);
   return c;
 }
 
@@ -135,14 +105,42 @@ Config *slowautoturnConfig() {
   return c;
 }
 
+Config *explodeConfig() {
+  Config *c = new Config;
+  baseConfig(c);
+  c->set("gameTime", 180000);
+  c->set("maxPoints", 3748);
+  c->set("turningReward", 1.0);
+  return c;
+}
+
+Config *testexplodeConfig() {
+  Config *c = new Config;
+  baseConfig(c);
+  c->set("destroyFortress", 100);
+  c->set("gameTime", 180000);
+  c->set("maxPoints", 3748);
+  c->set("turningReward", 0.0);
+  return c;
+}
+
+Config *nopenaltyexplodeConfig() {
+  Config *c = new Config;
+  baseConfig(c);
+  c->set("gameTime", 180000);
+  c->set("maxPoints", 3748);
+  c->set("missilePenalty", 0);
+  c->set("turningReward", 1.0);
+  return c;
+}
+
 Config *slowexplodeConfig() {
   Config *c = new Config;
   baseConfig(c);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
-  c->set("missilePenalty", 2);
-  c->set("missPenalty", 5);
-  c->set("shellSpeed", 2);
-  c->set("turningReward", 0.5);
+  c->set("missilePenalty", 0);
+  c->set("missPenalty", 1);
+  c->set("turningReward", 1.0);
   return c;
 } 
