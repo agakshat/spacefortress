@@ -17,14 +17,14 @@ register(
 register(
 	id='SpaceFortress-explode-features-v0',
 	entry_point='spacefortress.gym.envs:SSF_Env',
-	kwargs={ 'gametype': 'explode', 'obs_type': 'features' },
+	kwargs={ 'gametype': 'nopenalty-explode', 'obs_type': 'normalized-features' },
 	nondeterministic=False
 )
 
 register(
 	id='SpaceFortress-autoturn-features-v0',
 	entry_point='spacefortress.gym.envs:SSF_Env',
-	kwargs={ 'gametype': 'autoturn', 'obs_type': 'features' },
+	kwargs={ 'gametype': 'nopenalty-autoturn', 'obs_type': 'normalized-features' },
 	nondeterministic=False
 )
 

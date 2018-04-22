@@ -124,7 +124,7 @@ class SSF_Env(gym.Env):
                 len(self.g.missiles) / sf.MAX_MISSILES,
                 len(self.g.shells) / sf.MAX_SHELLS,
                 ]
-            if self.gametype in ["explode","deep-explode"]:
+            if self.gametype in ["explode","deep-explode", "nopenalty-explode"]:
                 t = self.g.timers
             else:
                 t = self.g.timers[:2]
@@ -149,7 +149,7 @@ class SSF_Env(gym.Env):
                 len(self.g.missiles),
                 len(self.g.shells)
                 ]
-            if self.gametype in ["explode","deep-explode"]:
+            if self.gametype in ["explode","deep-explode", "nopenalty-explode"]:
                 t = self.g.timers
             else:
                 t = self.g.timers[:2]
@@ -243,7 +243,7 @@ class SSF_Env(gym.Env):
             return self.game_state, reward, done, fort_kill
         else:
             self.game_state = np.array([])
-            return self._get_features(), reward, done, {}
+            return self._get_features(), reward, done, fort_kill
 
     def sign(self,x):
         if x==0: 
