@@ -13,6 +13,13 @@ typedef struct {
 static PyObject*get_##name(PySpaceFortressGameObject *self) {        \
   return Py_BuildValue(type, thing); \
 }
+/*
+#define DEFSET(name, value, thing) \
+static int set_##name(PySpaceFortressGameObject *self) {        \
+  thing = PyFloat_AsDouble(value); \
+  return 0; \
+}
+*/
 
 DEFGET(game_tick, "i", self->game->mTick);
 DEFGET(game_time, "i", self->game->mTime);
@@ -38,6 +45,34 @@ DEFGET(vulnerability_timer, "d", self->game->mFortress.mVulnerabilityTimer);
 DEFGET(vulnerability_time, "d", self->game->mConfig->getInt("fortressVulnerabilityTime"));
 DEFGET(thrust_flag, "N", PyBool_FromLong(self->game->mShip.mThrustFlag));
 DEFGET(turn_flag, "i", self->game->mShip.mTurnFlag);
+//DEFSET(ship_x, PyFloat_FromDouble(value), self->game->mShip.mPos.mX);
+/*
+int set_ship_x(PySpaceFortressGameObject *self, PyObject *value, void *closure) {
+  self->game->mShip.mPos.mX = PyFloat_AsDouble(value);
+  return 0;
+}
+int set_ship_y(PySpaceFortressGameObject *self, PyObject *value, void *closure) {
+  self->game->mShip.mPos.mY = PyFloat_AsDouble(value);
+  return 0;
+}
+int set_ship_vx(PySpaceFortressGameObject *self, PyObject *value, void *closure) {
+  self->game->mShip.mVel.mX = PyFloat_AsDouble(value);
+  return 0;
+}
+int set_ship_vy(PySpaceFortressGameObject *self, PyObject *value, void *closure) {
+  self->game->mShip.mVel.mY = PyFloat_AsDouble(value);
+  return 0;
+}
+int set_ship_angle(PySpaceFortressGameObject *self, PyObject *value, void *closure) {
+  self->game->mShip.mAngle = PyFloat_AsDouble(value);
+  return 0;
+}
+int set_fortress_angle(PySpaceFortressGameObject *self, PyObject *value, void *closure) {
+  self->game->mFortress.mAngle = PyFloat_AsDouble(value);
+  return 0;
+}
+*/
+
 
 
 static PyObject *
