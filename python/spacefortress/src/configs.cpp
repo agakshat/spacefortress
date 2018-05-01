@@ -110,7 +110,7 @@ Config *explodeConfig() {
   baseConfig(c);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
-  c->set("turningReward", 1.0);
+  c->set("turningReward", 0.0);
   return c;
 }
 
@@ -130,7 +130,7 @@ Config *nopenaltyexplodeConfig() {
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
   c->set("missilePenalty", 0);
-  c->set("turningReward", 1.0);
+  c->set("turningReward", 0.0);
   return c;
 }
 
@@ -141,6 +141,6 @@ Config *slowexplodeConfig() {
   c->set("maxPoints", 3748);
   c->set("missilePenalty", 0);
   c->set("missPenalty", 1);
-  c->set("turningReward", 1.0);
+  c->set("turningReward", 0.0);
   return c;
 } 
