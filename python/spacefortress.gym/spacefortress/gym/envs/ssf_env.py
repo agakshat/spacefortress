@@ -218,7 +218,7 @@ class SSF_Env(gym.Env):
             self.g.press_key(sf.THRUST_KEY)
         else:
             self.g.release_key(sf.THRUST_KEY)
-        if self.gametype in ["explode","deep-explode"]:
+        if self.gametype in ["explode","deep-explode","nopenalty-explode","test-explode"]:
             if keystate[2]:
                 self.g.press_key(sf.LEFT_KEY)
             else:
