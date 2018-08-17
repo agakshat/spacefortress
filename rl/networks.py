@@ -46,7 +46,7 @@ class ACNet(nn.Module):
 		x = F.relu(self.fc1(x))
 		if not self.ff:
 			if obs.size(0) == state.size(0):
-				state = self.gru(x,state*mask)
+				x = state = self.gru(x,state*mask)
 			else:
 				N = state.size(0)
 				T = int(x.size(0)/N)
@@ -58,7 +58,6 @@ class ACNet(nn.Module):
 					outputs.append(hx)
 				x = torch.stack(outputs,dim=0)
 				x = x.view(T*N,-1)
-			x = F.tanh(state)
 		else:
 			x = F.relu(self.fc2(x))
 		return x,state

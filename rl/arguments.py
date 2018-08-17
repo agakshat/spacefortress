@@ -52,6 +52,8 @@ def get_args():
                         help='optionally transfer learning from autoturn')
     parser.add_argument('--feedforward', action='store_true', default=False,
                         help='use feedforward instead of recurrent architecture')
+    parser.add_argument('--a2c', action='store_true', default=False,
+                        help='optionally use A2C instead of PPO')
     args = parser.parse_args()
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
