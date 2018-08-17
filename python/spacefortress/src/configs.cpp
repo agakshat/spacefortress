@@ -7,7 +7,7 @@ void baseConfig(Config *c) {
 
   c->set("destroyFortress", 500);
   c->set("shipDeathPenalty", 100);
-  c->set("missilePenalty", 2);
+  c->set("missilePenalty", 2.0);
   c->set("missPenalty", 0);
   c->set("incRewardInvulnerable", 0);
   c->set("incRewardVulnerable", 0);
@@ -78,7 +78,8 @@ Config *testautoturnConfig() {
   Config *c = new Config;
   baseConfig(c);
   c->set("autoTurn", true);
-  c->set("destroyFortress", 100);
+  c->set("missilePenalty",2.0);
+//  c->set("destroyFortress", 100);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
   return c;
@@ -90,7 +91,7 @@ Config *nopenaltyautoturnConfig() {
   c->set("autoTurn", true);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
-  c->set("missilePenalty", 0);
+  c->set("missilePenalty", 0.0);
   return c;
 }
 
@@ -100,7 +101,6 @@ Config *slowautoturnConfig() {
   c->set("autoTurn",true);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
-  c->set("missilePenalty",2);
   c->set("shellSpeed", 2);
   return c;
 }
@@ -110,17 +110,16 @@ Config *explodeConfig() {
   baseConfig(c);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
-  c->set("turningReward", 0.0);
   return c;
 }
 
 Config *testexplodeConfig() {
   Config *c = new Config;
   baseConfig(c);
-  c->set("destroyFortress", 100);
+//  c->set("destroyFortress", 100);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
-  c->set("turningReward", 0.0);
+  c->set("missilePenalty",2.0);
   return c;
 }
 
@@ -129,8 +128,7 @@ Config *nopenaltyexplodeConfig() {
   baseConfig(c);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
-  c->set("missilePenalty", 0);
-  c->set("turningReward", 0.0);
+  c->set("missilePenalty", 0.0);
   return c;
 }
 
@@ -139,8 +137,6 @@ Config *slowexplodeConfig() {
   baseConfig(c);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
-  c->set("missilePenalty", 0);
   c->set("missPenalty", 1);
-  c->set("turningReward", 0.0);
   return c;
 } 

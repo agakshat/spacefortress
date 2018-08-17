@@ -184,7 +184,7 @@ void Game::fireMissile( const Vector &p, double angle ) {
         mMissiles[i].mVel.mX = mConfig->getInt("missileSpeed") * cos(deg2rad(angle));
         mMissiles[i].mVel.mY = mConfig->getInt("missileSpeed") * sin(deg2rad(angle));
         addEvent( "missile-fired" );
-        penalize( mConfig->getInt( "missilePenalty" ));
+        penalize( mConfig->getDouble( "missilePenalty" ));
         return;
       }
     }
