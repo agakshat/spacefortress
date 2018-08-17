@@ -233,9 +233,9 @@ class SSF_Env(gym.Env):
         if self.g.vulnerability<=10 and not fort_kill:
             reward += 10*vlner_change
 
-        # reward = self.clip(reward)
+        reward = self.clip(reward,lowerlim=-1,upperlim=+1)
         # reward = reward + 5*fort_kill
-        reward = self.sign(reward)
+        # reward = self.sign(reward)
         reward = reward + 2*fort_kill
         self.prev_vlner = copy.deepcopy(self.g.vulnerability)
         done = self.g.is_game_over()
