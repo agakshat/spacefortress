@@ -1,3 +1,5 @@
+rl/tr2/
+__pycache__/
 *.pyc
 *.o
 *.so
