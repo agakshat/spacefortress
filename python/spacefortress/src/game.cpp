@@ -347,12 +347,6 @@ void Game::updateShip() {
       mCollisions.smallHex = true;
       addEvent("explode-smallhex");
     }
-
-    if (abs(mShip.mAngle-desiredAngle)<10 && abs(currentAngle-desiredAngle)>10) {
-      reward(mConfig->getDouble("turningReward"));
-    } else if (abs(mShip.mAngle-desiredAngle)>10 && abs(currentAngle-desiredAngle)<10) {
-      //penalize(mConfig->getInt("turningReward"));
-    }
   }
 }
 

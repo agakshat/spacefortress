@@ -5,9 +5,9 @@ void baseConfig(Config *c) {
   c->set("height", 626);
   c->set("gameTime", 60000);
 
-  c->set("destroyFortress", 500);
+  c->set("destroyFortress", 100);
   c->set("shipDeathPenalty", 100);
-  c->set("missilePenalty", 2.0);
+  c->set("missilePenalty", 2);
   c->set("missPenalty", 0);
   c->set("incRewardInvulnerable", 0);
   c->set("incRewardVulnerable", 0);
@@ -24,8 +24,6 @@ void baseConfig(Config *c) {
   c->set("autoTurn", false);
   c->set("staircase", false);
   c->set("fortressPointsPerContraction", 10);
-
-  c->set("turningReward", 0.0);
   // Fortress
   c->set("fortressSectorSize", 10);
   c->set("fortressLockTime", 1000);
@@ -50,27 +48,26 @@ void baseConfig(Config *c) {
   c->set("shipTurnSpeed", 6);
 }
 
-Config *trainingConfig() {
-  Config *c = new Config;
-  baseConfig(c);
-  c->set("autoTurn", true);
-  return c;
-}
-
-Config *staircaseConfig() {
-  Config *c = new Config;
-  baseConfig(c);
-  c->set("autoTurn", true);
-  c->set("staircase", true);
-  return c;
-}
-
 Config *autoturnConfig() {
   Config *c = new Config;
   baseConfig(c);
   c->set("autoTurn", true);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
+  c->set("destroyFortress", 1);
+  c->set("shipDeathPenalty", 1);
+  c->set("missilePenalty", 0.05);
+  return c;
+}
+
+Config *youturnConfig() {
+  Config *c = new Config;
+  baseConfig(c);
+  c->set("gameTime", 180000);
+  c->set("maxPoints", 3748);
+  c->set("destroyFortress", 1);
+  c->set("shipDeathPenalty", 1);
+  c->set("missilePenalty", 0.05);
   return c;
 }
 
@@ -78,65 +75,15 @@ Config *testautoturnConfig() {
   Config *c = new Config;
   baseConfig(c);
   c->set("autoTurn", true);
-  c->set("missilePenalty",2.0);
-//  c->set("destroyFortress", 100);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
   return c;
 }
 
-Config *nopenaltyautoturnConfig() {
-  Config *c = new Config;
-  baseConfig(c);
-  c->set("autoTurn", true);
-  c->set("gameTime", 180000);
-  c->set("maxPoints", 3748);
-  c->set("missilePenalty", 0.0);
-  return c;
-}
-
-Config *slowautoturnConfig() {
-  Config *c = new Config;
-  baseConfig(c);
-  c->set("autoTurn",true);
-  c->set("gameTime", 180000);
-  c->set("maxPoints", 3748);
-  c->set("shellSpeed", 2);
-  return c;
-}
-
-Config *explodeConfig() {
+Config *testyouturnConfig() {
   Config *c = new Config;
   baseConfig(c);
   c->set("gameTime", 180000);
   c->set("maxPoints", 3748);
   return c;
 }
-
-Config *testexplodeConfig() {
-  Config *c = new Config;
-  baseConfig(c);
-//  c->set("destroyFortress", 100);
-  c->set("gameTime", 180000);
-  c->set("maxPoints", 3748);
-  c->set("missilePenalty",2.0);
-  return c;
-}
-
-Config *nopenaltyexplodeConfig() {
-  Config *c = new Config;
-  baseConfig(c);
-  c->set("gameTime", 180000);
-  c->set("maxPoints", 3748);
-  c->set("missilePenalty", 0.0);
-  return c;
-}
-
-Config *slowexplodeConfig() {
-  Config *c = new Config;
-  baseConfig(c);
-  c->set("gameTime", 180000);
-  c->set("maxPoints", 3748);
-  c->set("missPenalty", 1);
-  return c;
-} 

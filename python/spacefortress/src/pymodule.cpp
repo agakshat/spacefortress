@@ -329,30 +329,14 @@ PySpaceFortressGame_init(PySpaceFortressGameObject* self, PyObject* args, PyObje
   if( !PyArg_ParseTupleAndKeywords( args, kwargs, "s|diii(iiii)", kwlist, &config_name, &line_width, &grayscale, &width, &height, &vp_x, &vp_y, &vp_width, &vp_height ))
     return -1;
 
-  if( strcmp(config_name, "staircase-training") == 0 ) {
-    self->config = trainingConfig();
-  } else if( strcmp(config_name, "staircase") == 0 ) {
-    self->config = staircaseConfig();
-  } else if( strcmp(config_name, "autoturn") == 0 ) {
+  if( strcmp(config_name, "autoturn") == 0 ) {
     self->config = autoturnConfig();
-  } else if( strcmp(config_name, "explode") == 0 ) {
-    self->config = explodeConfig();
-  } else if (strcmp(config_name, "slow-autoturn") == 0 ) {
-    self->config = slowautoturnConfig();
-  } else if (strcmp(config_name, "slow-explode") == 0 ) {
-    self->config = slowexplodeConfig();
-  } else if (strcmp(config_name, "nopenalty-autoturn") == 0 ) {
-    self->config = nopenaltyautoturnConfig();
-  } else if (strcmp(config_name, "nopenalty-explode") == 0 ) {
-    self->config = nopenaltyexplodeConfig();
-  } else if (strcmp(config_name, "test-explode") == 0 ) {
-    self->config = testexplodeConfig();
+  } else if( strcmp(config_name, "youturn") == 0 ) {
+    self->config = youturnConfig();
+  } else if (strcmp(config_name, "test-youturn") == 0 ) {
+    self->config = testyouturnConfig();
   } else if (strcmp(config_name, "test-autoturn") == 0 ) {
     self->config = testautoturnConfig();
-  // } else if( strcmp(config_name, "deep-autoturn") == 0 ) {
-  //   self->config = deepAutoturnConfig();
-  // } else if( strcmp(config_name, "deep-explode") == 0 ) {
-  //   self->config = deepExplodeConfig();
   } else {
     PyErr_Format(PyExc_RuntimeError, "cannot initialize %s. Unknown config value: `%s'", Py_TYPE(self)->tp_name, config_name);
     return -1;
