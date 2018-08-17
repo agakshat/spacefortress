@@ -47,7 +47,7 @@ class SSF_Env(gym.Env):
         'video.frames_per_second' : 30
     }
 
-    def __init__(self, gametype="deep-explode", scale=.2, viewport=(130,80,450,460), ls=3, action_set=1, obs_type='image'):
+    def __init__(self, gametype="youturn", scale=.2, viewport=(130,80,450,460), ls=3, action_set=1, obs_type='image'):
         assert obs_type in ('image', 'features', 'normalized-features', 'monitors')
         self.obs_type = obs_type
         self.seed()
@@ -60,10 +60,10 @@ class SSF_Env(gym.Env):
         self.ls = ls
         self.tickdur = int(np.ceil(1./self.metadata['video.frames_per_second']*1000))
         self.action_set = action_set
-        self.explode = False
+        self.youturn = False
         # 0=FIRE, 1=THRUST, 2=LEFT, 3=RIGHT
-        if self.gametype in ["explode","deep-explode","slow-explode","nopenalty-explode","test-explode"]:
-            self.explode = True
+        if self.gametype in ["youturn","test-youturn"]:
+            self.youturn = True
             if self.action_set == -1:
                 self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
             elif self.action_set == 0:
@@ -76,7 +76,7 @@ class SSF_Env(gym.Env):
                     [0, 0, 1, 0], # LEFT
                     [0, 0, 0, 1], # RIGHT
                 ])
-        elif self.gametype in ["autoturn","deep-autoturn","slow-autoturn","nopenalty-autoturn","test-autoturn"]:
+        elif self.gametype in ["autoturn","test-autoturn"]:
             if self.action_set == -1:
                 self.action_combinations = np.array(np.meshgrid([0, 1], [0, 1], [0, 1], [0, 1])).T.reshape(-1,4)
             elif self.action_set == 0:
@@ -124,7 +124,7 @@ class SSF_Env(gym.Env):
                 len(self.g.missiles) / sf.MAX_MISSILES,
                 len(self.g.shells) / sf.MAX_SHELLS,
                 ]
-            if self.gametype in ["explode","deep-explode", "nopenalty-explode"]:
+            if self.gametype in ["youturn","test-youturn"]:
                 t = self.g.timers
             else:
                 t = self.g.timers[:2]
@@ -149,7 +149,7 @@ class SSF_Env(gym.Env):
                 len(self.g.missiles),
                 len(self.g.shells)
                 ]
-            if self.gametype in ["explode","deep-explode", "nopenalty-explode"]:
+            if self.gametype in ["youturn","test-youturn"]:
                 t = self.g.timers
             else:
                 t = self.g.timers[:2]
@@ -218,7 +218,7 @@ class SSF_Env(gym.Env):
             self.g.press_key(sf.THRUST_KEY)
         else:
             self.g.release_key(sf.THRUST_KEY)
-        if self.gametype in ["explode","deep-explode","nopenalty-explode","test-explode"]:
+        if self.gametype in ["youturn","test-youturn"]:
             if keystate[2]:
                 self.g.press_key(sf.LEFT_KEY)
             else:
@@ -227,17 +227,22 @@ class SSF_Env(gym.Env):
                 self.g.press_key(sf.RIGHT_KEY)
             else:
                 self.g.release_key(sf.RIGHT_KEY)
+        
         reward = self.g.step_one_tick(self.tickdur)
-        fort_kill = reward > 100
-        vlner_change = self.g.vulnerability - self.prev_vlner
-        if self.g.vulnerability<=10 and not fort_kill:
-            reward += 10*vlner_change
+        
+        fort_kill = reward > 0
 
-        reward = self.clip(reward,lowerlim=-1,upperlim=+1)
-        # reward = reward + 5*fort_kill
-        # reward = self.sign(reward)
-        reward = reward + 2*fort_kill
-        self.prev_vlner = copy.deepcopy(self.g.vulnerability)
+        if self.gametype in ["autoturn","youturn"]:
+            vlner_change = self.g.vulnerability - self.prev_vlner
+            # if self.g.vulnerability<=10 and not fort_kill:
+            #     reward += 10*vlner_change
+            if not fort_kill:
+                reward += self.sign(vlner_change)
+            reward = self.clip(reward,lowerlim=-1,upperlim=+1)
+
+            # reward = reward + 2*fort_kill    # Fortress Death Bonus
+            self.prev_vlner = copy.deepcopy(self.g.vulnerability)
+
         done = self.g.is_game_over()
         self.last_action = action
         if self.obs_type == 'image':
