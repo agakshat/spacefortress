@@ -7,7 +7,7 @@ void baseConfig(Config *c) {
 
   c->set("destroyFortress", 100);
   c->set("shipDeathPenalty", 100);
-  c->set("missilePenalty", 2);
+  c->set("missilePenalty", 2.0);
   c->set("missPenalty", 0);
   c->set("incRewardInvulnerable", 0);
   c->set("incRewardVulnerable", 0);

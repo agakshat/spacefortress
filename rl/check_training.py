@@ -17,8 +17,8 @@ parser.add_argument('--seed', type=int, default=1,
                     help='random seed (default: 1)')
 parser.add_argument('--num-stack', type=int, default=4,
                     help='number of frames to stack (default: 4)')
-parser.add_argument('--env-name', default='testyouturn',
-                    help='environment to train on (default: testyouturn)')
+parser.add_argument('--env-name', default='youturn',
+                    help='environment to train on (default: youturn)')
 parser.add_argument('--load-dir', default='./trained_models/',
                     help='directory to save agent logs (default: ./trained_models/)')
 parser.add_argument('--steps', type=int, default=100000,
@@ -32,7 +32,11 @@ parser.add_argument('--feedforward', action='store_true', default=False,
 args = parser.parse_args()
 
 torch.set_num_threads(1)
-env = make_env(env_name, args.seed, 0, None)
+if args.env_name == 'autoturn':
+    args.env_name = 'SpaceFortress-testautoturn-image-v0'
+if args.env_name == 'youturn':
+    args.env_name = 'SpaceFortress-testyouturn-image-v0'
+env = make_env(args.env_name, args.seed, 0)
 env = gym_vecenv.DummyVecEnv([env])
 action_dim = env.action_space.n
 
