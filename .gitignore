@@ -1,3 +1,5 @@
+rl/**/*.html
+rl/**/*.pth
 rl/tr2/
 __pycache__/
 *.pyc

@@ -234,13 +234,13 @@ class SSF_Env(gym.Env):
 
         if self.gametype in ["autoturn","youturn"]:
             vlner_change = self.g.vulnerability - self.prev_vlner
-            # if self.g.vulnerability<=10 and not fort_kill:
-            #     reward += vlner_change
-            if not fort_kill:
-                reward += self.sign(vlner_change)
+            if self.g.vulnerability<=10 and not fort_kill:
+                 reward += vlner_change
+            #if not fort_kill:
+            #    reward += self.sign(vlner_change)
             reward = self.clip(reward,lowerlim=-1,upperlim=+1)
 
-            # reward = reward + 2*fort_kill    # Fortress Death Bonus
+            reward = reward + 2*fort_kill    # Fortress Death Bonus
             self.prev_vlner = copy.deepcopy(self.g.vulnerability)
 
         done = self.g.is_game_over()
