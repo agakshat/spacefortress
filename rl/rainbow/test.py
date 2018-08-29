@@ -10,11 +10,11 @@ from env import WrapPyTorch
 
 # Globals
 Ts, rewards, Qs, best_avg_reward = [], [], [], -1e10
-
+test_iter = 0
 
 # Test DQN
 def test(args, T, dqn, val_mem, evaluate=False):
-  global Ts, rewards, Qs, best_avg_reward
+  global Ts, rewards, Qs, best_avg_reward, test_iter
   # Environment
   if args.game == 'autoturn':
     env_name = 'SpaceFortress-testautoturn-image-v0'
@@ -59,13 +59,13 @@ def test(args, T, dqn, val_mem, evaluate=False):
     Qs.append(T_Qs)
 
     # Plot
-    _plot_line(Ts, rewards, 'Reward', path='results2')
-    _plot_line(Ts, Qs, 'Q', path='results2')
+    _plot_line(Ts, rewards, 'Reward', path=args.save_dir)
+    _plot_line(Ts, Qs, 'Q', path=args.save_dir)
 
     # Save model parameters if improved
     if avg_reward > best_avg_reward:
       best_avg_reward = avg_reward
-      dqn.save('results2')
+      dqn.save(args.save_dir+'/model'+str(test_iter)+'.pt')
 
   # Return average reward and Q-value
   return avg_reward, avg_Q

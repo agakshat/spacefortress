@@ -1,5 +1,6 @@
 rl/**/*.html
 rl/**/*.pth
+rl/**/*.pt
 rl/tr2/
 __pycache__/
 *.pyc
