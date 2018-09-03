@@ -6,7 +6,7 @@ import torch
 import gym
 import spacefortress.gym
 from env import WrapPyTorch
-
+import pdb
 
 # Globals
 Ts, rewards, Qs, best_avg_reward = [], [], [], -1e10
@@ -31,13 +31,15 @@ def test(args, T, dqn, val_mem, evaluate=False):
 
   # Test performance over several episodes
   done = True
+  fortress_destroyed = 0
   for _ in range(args.evaluation_episodes):
     while True:
       if done:
         state, reward_sum, done = env.reset(), 0, False
         state = torch.FloatTensor(state).to(args.device)
       action = dqn.act_e_greedy(state)  # Choose an action ε-greedily
-      state, reward, done, _ = env.step(action)  # Step
+      state, reward, done, info = env.step(action)  # Step
+      fortress_destroyed += info
       state = torch.FloatTensor(state).to(args.device)
       reward_sum += reward
       if args.render:
@@ -47,7 +49,6 @@ def test(args, T, dqn, val_mem, evaluate=False):
         T_rewards.append(reward_sum)
         break
   env.close()
-
   # Test Q-values over validation memory
   for state in val_mem:  # Iterate over valid states
     T_Qs.append(dqn.evaluate_q(state))

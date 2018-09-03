@@ -168,7 +168,7 @@ class PPOAgent(object):
 				self.writer.add_scalar('data/valueloss',value_loss.item(),total_num_steps)
 				self.writer.add_scalar('data/actionloss',action_loss.item(),total_num_steps)
 				self.writer.add_scalar('data/numdestruction',num_destruction,total_num_steps)
-				# self.scheduler.step(final_rewards.mean())
+				#self.scheduler.step(final_rewards.mean())i
 				#self.scheduler2.step()
 				num_destruction = 0
 
