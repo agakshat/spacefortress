@@ -14,8 +14,8 @@ plt.ion()
 # plt.title('Youturn Game, PPO')
 # plt.plot([0,2700],[human,human],marker='+')
 
-fnames = [159,160]
-plt.title('Temporal Transfer Learning, 600ms')
+fnames = [161,162]
+plt.title('Temporal Transfer Learning, 125ms')
 
 for f in fnames:
   f1 = pickle.load(open("tr2/"+str(f)+"/learning_curves.p","rb"))

@@ -74,3 +74,9 @@ In the `rl/rainbow` folder, run
 python main.py --game youturn --evaluate --model <specify trained model file>
 ```
 
+## Learning Curves
+### PPO
+
+Autoturn ![autoturn learning curves](./rl/imgs/autoturn_ppo.png)
+Youturn ![youturn learning curves](./rl/imgs/youturn_ppo.png)
+
