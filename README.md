@@ -27,6 +27,11 @@ This repo accompanies our arXiv paper [1805.06824](https://arxiv.org/abs/1805.06
 Done! You can now add `import spacefortress.gym` to your script and start using the Space Fortress environments.
 
 ### Requirements for the baseline RL code
+Install PyTorch (v0.4 or higher) from [their website](https://pytorch.org), and then run:
+```bash
+pip install numpy tensorboardX gym_vecenv opencv-python atari-py plotly
+```
+OR you can install dependencies individually:
 * numpy
 * [PyTorch](https://pytorch.org) (v0.4 or higher)
 * [tensorboardX](https://github.com/lanpa/tensorboardX)
@@ -34,6 +39,7 @@ Done! You can now add `import spacefortress.gym` to your script and start using 
 * opencv-python `pip install opencv-python`
 * [atari-py](https://github.com/openai/atari-py)
 * [plotly](https://github.com/plotly/plotly.py)
+
 
 Credits to [ikostrikov](https://github.com/ikostrikov/pytorch-a2c-ppo-acktr) and [Kaixhin](https://github.com/Kaixhin/Rainbow) for their excellent implementations of PPO, A2C and Rainbow.
 
@@ -44,13 +50,15 @@ In the `rl` folder, run
 python train.py --env-name youturn
 ```
 By default, uses recurrent (SF-GRU) architecture and PPO algorithm. To use A2C, add `--a2c` in the run command, and to use the feedforward SF-FF architecture, add `--feedforward` in the run command. Change the `--env-name` flag to `autoturn` to use that version of Space Fortress. For details on Autoturn and Youturn, please refer to the paper (linked above).
-Flags 
+
+Flags for algorithmic hyperparameters can be found in `rl/arguments.py` and accordingly specified in the run command.
 
 ### Rainbow
 In the `rl/rainbow` folder, run
 ```bash
 python main.py --game youturn
 ```
+Flags for algorithmic hyperparameters can be found in `rl/rainbow/main.py` and accordingly specified in the run command.
 
 ## Evaluation
 ### PPO/A2C

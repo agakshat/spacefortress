@@ -27,7 +27,7 @@ void baseConfig(Config *c) {
   // Fortress
   c->set("fortressSectorSize", 10);
   c->set("fortressLockTime", 1000);
-  c->set("fortressVulnerabilityTime", 250);
+  c->set("fortressVulnerabilityTime", 125);
   c->set("fortressVulnerabilityThreshold", 10);
   c->set("fortressCollisionRadius", 18);
   // Hexagons
