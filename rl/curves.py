@@ -18,7 +18,7 @@ parser.add_argument('--env-name', default='youturn',
 parser.add_argument('--load-dir', default='./trained_models/',
                     help='directory to save agent logs (default: ./trained_models/)')
 parser.add_argument('--steps', type=int, default=16000,
-                    help='number of steps to run testing script (default: 5000)')
+                    help='number of steps to run testing script (default: 16000)')
 parser.add_argument('--render', type=int, default=0,
                     help='pass flag equal to 1 for rendering (default: 0)')
 parser.add_argument('--deterministic', action='store_true', default=False,
