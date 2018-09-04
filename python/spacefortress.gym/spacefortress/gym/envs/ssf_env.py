@@ -236,7 +236,7 @@ class SSF_Env(gym.Env):
             vlner_change = self.g.vulnerability - self.prev_vlner
             if self.g.vulnerability<=10 and not fort_kill:
                  reward += vlner_change
-            #if not fort_kill:
+            # if not fort_kill:
             #    reward += self.sign(vlner_change)
             reward = self.clip(reward,lowerlim=-1,upperlim=+1)
 

@@ -66,7 +66,7 @@ In the `rl` folder, run
 ```bash
 python evaluate.py --env-name youturn --load-dir <specify trained model file>
 ```
-Again, to evalute a model with feedforward architecture, add the `--feedforward` flag to the run command. Similarly, add `--render` to see the agent playing the game.
+To evaluate a model with feedforward architecture, add the `--feedforward` flag to the run command. Similarly, add `--render` to see the agent playing the game.
 
 ### Rainbow
 In the `rl/rainbow` folder, run
