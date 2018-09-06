@@ -3,7 +3,7 @@
 **Space Fortress is a benchmark for studying context and temporal sensitivity of deep reinforcement learning algorithms.**
 
 This repository contains:
-1. OpenAI Gym compatible environment of Space Fortress, courtesy of Shawn Betts and Ryan Hope
+1. An OpenAI Gym compatible RL environment for Space Fortress, courtesy of Shawn Betts and Ryan Hope [bitbucket url](https://bitbucket.org/andersonlab/c-spacefortress)
 2. Baseline code for deep reinforcement learning (PPO, A2C, Rainbow) on the Space Fortress environments
 
 This repo accompanies our arXiv paper [1805.06824](https://arxiv.org/abs/1805.06824). If you used this code or would like to cite our paper, please cite using the following BibTeX:
