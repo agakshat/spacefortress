@@ -8,12 +8,12 @@ lines = ["--",":","-.","-"]
 linecycler = cycle(lines)
 
 # fnames = [145,137,140,134]
-# human = 1989
+# human = 1810
 # plt.title('Autoturn Game, PPO')
 # plt.plot([0,2700],[human,human],marker='+')
 
 fnames = [144,136,139,135]
-human = 216
+human = -169
 plt.title('Youturn Game, PPO')
 plt.plot([0,2700],[human,human],marker='+')
 
@@ -29,7 +29,7 @@ for f in fnames:
     Y.append(f1[k][1])
   plt.plot(X,Y,marker='',ls=next(linecycler))#,color=next(colorcycler))
 
-plt.legend(['Humans','SF-GRU: Default Rewards','SF-GRU: Dense Rewards','SF-FF: AECI','SF-GRU: AECI'],ncol=2)
+plt.legend(['Average Human Score','SF-GRU: Default Rewards','SF-GRU: Dense Rewards','SF-FF: AECI','SF-GRU: AECI'],ncol=2)
 # plt.legend(['Without Transfer','With Transfer'])
 
 plt.xlabel('Training Iteration')
