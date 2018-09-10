@@ -8,15 +8,13 @@ This repository contains:
 1. An OpenAI Gym compatible RL environment for Space Fortress, courtesy of Shawn Betts and Ryan Hope [bitbucket url](https://bitbucket.org/andersonlab/c-spacefortress)
 2. Baseline code for deep reinforcement learning (PPO, A2C, Rainbow) on the Space Fortress environments
 
-This repo accompanies our arXiv paper [1805.06824](https://arxiv.org/abs/1805.06824). If you used this code or would like to cite our paper, please cite using the following BibTeX:
+This repo accompanies our arXiv paper [1809.02206](https://arxiv.org/abs/1809.02206). If you used this code or would like to cite our paper, please cite using the following BibTeX:
 
-    @article{DBLP:journals/corr/abs-1805-06824,
+    @article{agarwal2018challenges,
       author    = {Akshat Agarwal and Ryan Hope and Katia Sycara},
-      title     = {Learning Time-Sensitive Strategies in Space Fortress},
-      journal   = {CoRR},
-      volume    = {abs/1805.06824},
+      title     = {Challenges of Context and Time in Reinforcement Learning: Introducing Space Fortress as a Benchmark},
+      journal   = {arXiv preprint arXiv:1809.02206},
       year      = {2018},
-      url       = {http://arxiv.org/abs/1805.06824}
     }
 
 ## Installation
