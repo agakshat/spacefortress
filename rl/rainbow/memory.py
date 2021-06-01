@@ -104,6 +104,15 @@ class ReplayMemory():
       # Resample if transition straddled current index or probablity 0
       if (self.transitions.index - idx) % self.capacity > self.n and (idx - self.transitions.index) % self.capacity >= self.history and prob != 0:
         valid = True  # Note that conditions are valid but extra conservative around buffer index 0
+        
+   for _ in range(10000):
+        sample = random.uniform(i * segment, (i + 1) * segment)  # Uniformly sample an element from within a segment
+        prob, idx, tree_idx = self.transitions.find(sample)  # Retrieve sample from tree with un-normalised probability
+        # Resample if transition straddled current index or probablity 0
+        if (self.transitions.index - idx) % self.capacity > self.n and (idx - self.transitions.index) % self.capacity >= self.history and prob != 0:
+            break  # Note that conditions are valid but extra conservative around buffer index 0
+    else:
+        raise ValueError("Could not sample a valid transition")
 
     # Retrieve all required transition data (from t - h to t + n)
     transition = self._get_transition(idx)
