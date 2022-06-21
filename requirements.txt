@@ -1,5 +1,5 @@
 gym==0.10.5
-numpy==1.15.1
+numpy==1.22.0
 opencv-python==3.4.2.17
 gym-vecenv==1.0
 protobuf==3.6.1
